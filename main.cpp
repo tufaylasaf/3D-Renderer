@@ -1,7 +1,7 @@
-#include "Mesh.h"
+#include "Model.h"
 
-const unsigned int width = 800;
-const unsigned int height = 800;
+const unsigned int width = 1600;
+const unsigned int height = 900;
 
 Vertex vertices[] =
     {
@@ -60,6 +60,14 @@ int main()
         return -1;
     }
 
+    GLFWmonitor *primaryMonitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode *videoMode = glfwGetVideoMode(primaryMonitor);
+
+    int windowPosX = (videoMode->width - width) / 2;
+    int windowPosY = (videoMode->height - height) / 2;
+
+    glfwSetWindowPos(window, windowPosX, windowPosY);
+
     glfwMakeContextCurrent(window);
 
     gladLoadGL();
@@ -67,8 +75,8 @@ int main()
     glViewport(0, 0, width, height);
 
     Texture textures[]{
-        Texture("res/textures/planks.png", "diffuse", 0, GL_RGBA, GL_UNSIGNED_BYTE),
-        Texture("res/textures/planksSpec.png", "specular", 1, GL_RED, GL_UNSIGNED_BYTE)};
+        Texture("res/textures/planks.png", "diffuse", 0),
+        Texture("res/textures/planksSpec.png", "specular", 1)};
 
     Shader shaderProgram("res/shaders/default.vert", "res/shaders/default.frag");
 
@@ -106,10 +114,12 @@ int main()
 
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
+    Model model("res/models/monkey/monkey.gltf");
+
     while (!glfwWindowShouldClose(window))
     {
 
-        glClearColor(0.125f, 0.125f, 0.125f, 1.0f);
+        glClearColor(0.1f, 0.04f, 0.11f, 1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -117,7 +127,8 @@ int main()
 
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
-        floor.Draw(shaderProgram, camera);
+        // floor.Draw(shaderProgram, camera);
+        model.Draw(shaderProgram, camera);
         light.Draw(lightShader, camera);
 
         glfwSwapBuffers(window);
