@@ -1,8 +1,5 @@
 #include "Model.h"
 
-const unsigned int width = 1600;
-const unsigned int height = 900;
-
 Vertex vertices[] =
     {
         Vertex{glm::vec3(-1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
@@ -41,6 +38,11 @@ GLuint lightIndices[] =
         4, 5, 6,
         4, 6, 7};
 
+const unsigned int width = 1600;
+const unsigned int height = 900;
+
+const unsigned int samples = 8;
+
 int main()
 {
 
@@ -48,6 +50,7 @@ int main()
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_SAMPLES, samples);
 
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -112,19 +115,43 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    glFrontFace(GL_CCW);
+
+    glEnable(GL_MULTISAMPLE);
+
+    // glEnable(GL_FRAMEBUFFER_SRGB);
+
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
     Model model("res/models/monkey/monkey.gltf");
 
+    double prevTime = 0.0;
+    double crntTime = 0.0;
+    double timeDiff;
+    unsigned int counter = 0;
+
     while (!glfwWindowShouldClose(window))
     {
+        crntTime = glfwGetTime();
+        timeDiff = crntTime - prevTime;
+        counter++;
+        if (timeDiff > 1.0 / 30.0)
+        {
+            std::string FPS = std::to_string((1.0 / timeDiff) * counter);
+            std::string ms = std::to_string((timeDiff / counter) * 1000);
+            std::string windowTitle = "tuf3D - " + FPS + "FPS / " + ms + "ms";
+            glfwSetWindowTitle(window, windowTitle.c_str());
+            prevTime = crntTime;
+            counter = 0;
+        }
 
-        glClearColor(0.1f, 0.04f, 0.11f, 1.0f);
+        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         camera.Inputs(window);
-
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
         // floor.Draw(shaderProgram, camera);
