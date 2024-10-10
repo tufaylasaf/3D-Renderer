@@ -1,4 +1,4 @@
-#include "Camera.h"
+#include "camera.h"
 
 Camera::Camera(int width, int height, glm::vec3 position)
 {
@@ -28,7 +28,16 @@ void Camera::Matrix(Shader &shader, const char *uniform)
 
 void Camera::Inputs(GLFWwindow *window)
 {
+    // Get ImGui I/O structure
+    ImGuiIO &io = ImGui::GetIO();
 
+    // If ImGui wants to capture the mouse, don't process camera inputs
+    if (io.WantCaptureMouse)
+    {
+        return; // Exit the function early, no camera input when interacting with ImGui
+    }
+
+    // Camera position movement
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
         Position += speed * Orientation;
@@ -62,9 +71,9 @@ void Camera::Inputs(GLFWwindow *window)
         speed = 0.001f;
     }
 
+    // Mouse input for camera rotation
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
     {
-
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
         if (firstClick)
@@ -75,7 +84,6 @@ void Camera::Inputs(GLFWwindow *window)
 
         double mouseX;
         double mouseY;
-
         glfwGetCursorPos(window, &mouseX, &mouseY);
 
         float rotX = sensitivity * (float)(mouseY - (height / 2)) / height;
@@ -94,9 +102,7 @@ void Camera::Inputs(GLFWwindow *window)
     }
     else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
     {
-
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
         firstClick = true;
     }
 }

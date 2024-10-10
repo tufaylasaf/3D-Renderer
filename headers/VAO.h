@@ -1,6 +1,10 @@
 #ifndef VAO_CLASS_H
 #define VAO_CLASS_H
 
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 #include <glad/glad.h>
 #include "VBO.h"
 

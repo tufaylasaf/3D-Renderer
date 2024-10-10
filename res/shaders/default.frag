@@ -47,7 +47,8 @@ vec4 pointLight()
 		specular = specAmount * specularLight;
 	}
 
-	return (texture(diffuse0, texCoord) * (diffuse * inten + ambient) + texture(specular0, texCoord).r * specular * inten) * lightColor;
+	// return (texture(diffuse0, texCoord) * (diffuse * inten + ambient) + texture(specular0, texCoord).r * specular * inten) * lightColor;
+	return vec4(1.0f,1.0f,1.0f,1.0f) * (diffuse * inten + ambient + specular * inten) * lightColor;
 }
 
 vec4 direcLight()
@@ -67,7 +68,8 @@ vec4 direcLight()
 	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 16);
 	float specular = specAmount * specularLight;
 
-	return (texture(diffuse0, texCoord) * (diffuse + ambient) + texture(specular0, texCoord).r * specular) * lightColor;
+	// return (texture(diffuse0, texCoord) * (diffuse + ambient) + texture(specular0, texCoord).r * specular) * lightColor;
+	return vec4(1.0f,1.0f,1.0f,1.0f) * (diffuse + ambient + specular) * lightColor;
 }
 
 vec4 spotLight()
@@ -102,5 +104,5 @@ vec4 spotLight()
 void main()
 {
 
-	FragColor = direcLight();
+	FragColor = pointLight();
 }

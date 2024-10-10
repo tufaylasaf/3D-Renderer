@@ -4,7 +4,7 @@
         "name": "GCC",
         "includePath": ["${workspaceFolder}/**",
             "C:\\glfw-3.4.bin.WIN64\\include",
-        "C:\\glew-2.1.0\\include","C:\\glad\\include","C:\\glm-1.0.1"],
+        "C:\\glew-2.1.0\\include","C:\\glad\\include","C:\\glm-1.0.1","C:\\imgui"],
         "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
         "windowsSdkVersion": "10.0.22000.0",
         "compilerPath": "C:/msys64/mingw64/bin/g++.exe",

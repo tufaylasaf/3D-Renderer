@@ -2,6 +2,10 @@
 #define CAMERA_CLASS_H
 #define GLM_ENABLE_EXPERIMENTAL
 
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
