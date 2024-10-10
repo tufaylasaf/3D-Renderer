@@ -1,7 +1,8 @@
 #include "Model.h"
 
-Model::Model(const char *file)
+Model::Model(const char *file, std::string n)
 {
+    name = n;
     std::string text = get_file_contents(file);
     JSON = json::parse(text);
 
@@ -15,8 +16,26 @@ void Model::Draw(Shader &shader, Camera &camera)
 {
     for (unsigned int i = 0; i < meshes.size(); i++)
     {
-        meshes[i].Mesh::Draw(shader, camera, matricesMeshes[i]);
+        meshes[i].Mesh::Draw(shader, camera, translation, rotation, scale, matricesMeshes[i]);
     }
+
+    // ImGui code to manipulate translation, rotation, and scale
+    ImGui::Begin(name.c_str());
+
+    ImGui::Text("Position");
+    ImGui::DragFloat3("Position", &translation[0], 0.1f);
+
+    glm::vec3 euler = glm::degrees(glm::eulerAngles(rotation)); // Convert quaternion to Euler angles in degrees
+    ImGui::Text("Rotation (Euler Angles)");
+    if (ImGui::DragFloat3("Rotation", &euler[0], 1.0f))
+    {
+        rotation = glm::quat(glm::radians(euler)); // Convert back to radians and quaternion
+    }
+
+    ImGui::Text("Scale");
+    ImGui::DragFloat3("Scale", &scale[0], 0.1f);
+
+    ImGui::End();
 }
 
 void Model::loadMesh(unsigned int indMesh)
@@ -263,7 +282,6 @@ std::vector<Vertex> Model::assembleVertices(
             Vertex{
                 positions[i],
                 normals[i],
-                glm::vec3(1.0f, 1.0f, 1.0f),
                 texUVs[i]});
     }
     return vertices;

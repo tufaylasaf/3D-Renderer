@@ -66,8 +66,8 @@ int main()
 
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
-    Model model("res/models/monkey/monkey.gltf");
-    Model model2("res/models/sphere/sphere.gltf");
+    Model model("res/models/monkey/monkey.gltf", "Monkey");
+    Model model2("res/models/sphere/sphere.gltf", "Sphere");
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

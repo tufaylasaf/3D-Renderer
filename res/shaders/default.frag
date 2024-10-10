@@ -4,13 +4,11 @@ out vec4 FragColor;
 
 in vec3 crntPos;
 in vec3 Normal;
-in vec3 color;
 in vec2 texCoord;
-
-
 
 uniform sampler2D diffuse0;
 uniform sampler2D specular0;
+
 uniform vec4 lightColor;
 uniform vec3 lightPos;
 uniform vec3 camPos;
@@ -104,5 +102,5 @@ vec4 spotLight()
 void main()
 {
 
-	FragColor = pointLight();
+	FragColor = direcLight();
 }
