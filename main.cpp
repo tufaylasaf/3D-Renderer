@@ -39,17 +39,18 @@ int main()
 
     glfwMakeContextCurrent(window);
 
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cerr << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
+
     gladLoadGL();
 
     glViewport(0, 0, width, height);
 
     Shader shaderProgram("res/shaders/default.vert", "res/shaders/default.frag");
     Shader lightShader("res/shaders/light.vert", "res/shaders/light.frag");
-
-    // glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    // glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
-    // glm::mat4 lightModel = glm::mat4(1.0f);
-    // lightModel = glm::translate(lightModel, lightPos);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -59,22 +60,16 @@ int main()
 
     glEnable(GL_MULTISAMPLE);
 
-    // glEnable(GL_FRAMEBUFFER_SRGB);
-
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
     Model model("res/models/monkey/monkey.gltf", "Monkey");
     Model model2("res/models/sphere/sphere.gltf", "Sphere");
     Model light("res/models/sphere/sphere.gltf", "Light");
 
-    light.translation = glm::vec3(0.0f, 3.0f, 0.0f);
-    light.scale = glm::vec3(0.1f, 0.1f, 0.1f);
-
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
-    // ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
@@ -97,22 +92,16 @@ int main()
 
         ImGui::Begin("Global", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
 
-        // ImGui::TextColored(ImVec4(255.0f, 128.0f, 0.0f, 255.0f), "Directional Light");
-        // ImGui::DragFloat3("Position", &light.translation[0], 0.1f);
-        // ImGui::ColorEdit3("Color", &light.color[0]);
-
         ImGui::TextColored(ImVec4(128.0f, 0.0f, 128.0f, 255.0f), "Stats");
         ImGui::Text("FPS: %.1f", io.Framerate);
         ImGui::Text("Frame time: %.3f ms", 1000.0f / io.Framerate);
 
         ImGui::End();
 
-        // Draw the model
         model.Draw(shaderProgram, camera);
         model2.Draw(shaderProgram, camera);
         light.Draw(lightShader, camera);
 
-        // Render ImGui frame
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -120,6 +109,10 @@ int main()
 
         glfwPollEvents();
     }
+
+    model.SaveImGuiData("saveData/transforms.json");
+    model2.SaveImGuiData("saveData/transforms.json");
+    light.SaveImGuiData("saveData/transforms.json");
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

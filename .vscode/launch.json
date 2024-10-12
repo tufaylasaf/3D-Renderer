@@ -1,13 +1,14 @@
 {
+    "version": "0.2.0",
     "configurations": [
         {
-            "name": "C/C++: g++.exe build and debug active file",
+            "name": "Build and Run project",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}\\${fileBasenameNoExtension}.exe",
+            "program": "${workspaceFolder}/tuf3D.exe",  // Path to the executable in the root folder
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}",  // Set working directory to root folder
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -24,8 +25,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "C/C++: g++.exe build active file"
+            "preLaunchTask": "Build Project"
         }
-    ],
-    "version": "2.0.0"
+    ]
 }

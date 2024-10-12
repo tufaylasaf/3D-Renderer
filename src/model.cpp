@@ -10,6 +10,8 @@ Model::Model(const char *file, std::string n)
     data = getData();
 
     traverseNode(0);
+
+    LoadImGuiData("saveData/transforms.json");
 }
 
 void Model::Draw(Shader &shader, Camera &camera)
@@ -43,6 +45,100 @@ void Model::Draw(Shader &shader, Camera &camera)
     ImGui::ColorEdit3("Model Color", &color[0]); // Add color wheel for model color
 
     ImGui::End();
+}
+
+void Model::SaveImGuiData(const std::string &filename)
+{
+    std::ifstream file(filename);
+    json saveData;
+
+    // If the file exists, load it to update with new data
+    if (file.is_open())
+    {
+        file >> saveData;
+        file.close();
+    }
+
+    // Save the current transformation data
+    saveData[name]["translation"] = {translation.x, translation.y, translation.z};
+
+    glm::vec3 euler = glm::degrees(glm::eulerAngles(rotation)); // Convert quaternion to Euler angles in degrees
+    saveData[name]["rotation"] = {euler.x, euler.y, euler.z};
+
+    saveData[name]["scale"] = {scale.x, scale.y, scale.z};
+    saveData[name]["color"] = {color.x, color.y, color.z};
+
+    // Write the updated data to the file
+    std::ofstream outFile(filename);
+    if (outFile.is_open())
+    {
+        outFile << saveData.dump(4); // Save with 4 spaces indentation
+        outFile.close();
+    }
+    else
+    {
+        std::cerr << "Unable to open file for saving transforms!" << std::endl;
+    }
+}
+
+void Model::LoadImGuiData(const std::string &filename)
+{
+    std::ifstream file(filename);
+    if (file.is_open())
+    {
+        json loadData;
+        file >> loadData;
+        file.close();
+
+        // If the model name exists in the JSON file, load its transformations
+        if (loadData.contains(name))
+        {
+            // Load translation
+            if (loadData[name].contains("translation"))
+            {
+                translation = glm::vec3(
+                    loadData[name]["translation"][0],
+                    loadData[name]["translation"][1],
+                    loadData[name]["translation"][2]);
+            }
+
+            // Load rotation (Euler angles -> quaternion)
+            if (loadData[name].contains("rotation"))
+            {
+                glm::vec3 eulerAngles(
+                    loadData[name]["rotation"][0],
+                    loadData[name]["rotation"][1],
+                    loadData[name]["rotation"][2]);
+                rotation = glm::quat(glm::radians(eulerAngles)); // Convert degrees to radians and back to quaternion
+            }
+
+            // Load scale
+            if (loadData[name].contains("scale"))
+            {
+                scale = glm::vec3(
+                    loadData[name]["scale"][0],
+                    loadData[name]["scale"][1],
+                    loadData[name]["scale"][2]);
+            }
+
+            // Load color
+            if (loadData[name].contains("color"))
+            {
+                color = glm::vec3(
+                    loadData[name]["color"][0],
+                    loadData[name]["color"][1],
+                    loadData[name]["color"][2]);
+            }
+        }
+        else
+        {
+            std::cerr << "No saved transform data for model: " << name << std::endl;
+        }
+    }
+    else
+    {
+        std::cerr << "Unable to open file for loading transforms!" << std::endl;
+    }
 }
 
 void Model::loadMesh(unsigned int indMesh)

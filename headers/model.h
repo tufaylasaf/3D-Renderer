@@ -16,10 +16,16 @@ public:
 
     std::string name;
 
+    static std::vector<Model *> models;
+
     // Loads in a model from a file and stores tha information in 'data', 'JSON', and 'file'
     Model(const char *file, std::string n);
 
     void Draw(Shader &shader, Camera &camera);
+
+    void SaveImGuiData(const std::string &filename);
+
+    void LoadImGuiData(const std::string &filename);
 
 private:
     // Variables for easy access
