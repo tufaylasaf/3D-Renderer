@@ -18,7 +18,7 @@ void main()
 
 	crntPos = vec3(model *vec4(aPos, 1.0f));
 
-	Normal = aNormal;
+	Normal = mat3(transpose(inverse(model))) * aNormal;
 
 	texCoord = mat2(0.0, -1.0, 1.0, 0.0) * aTex;
 	

@@ -24,6 +24,7 @@ public:
         glm::vec3 &translation,
         glm::quat &rotation,
         glm::vec3 &scale,
+        glm::vec3 &color,
         glm::mat4 matrix = glm::mat4(1.0f));
 };
 

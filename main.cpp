@@ -44,15 +44,12 @@ int main()
     glViewport(0, 0, width, height);
 
     Shader shaderProgram("res/shaders/default.vert", "res/shaders/default.frag");
+    Shader lightShader("res/shaders/light.vert", "res/shaders/light.frag");
 
-    glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
-    glm::mat4 lightModel = glm::mat4(1.0f);
-    lightModel = glm::translate(lightModel, lightPos);
-
-    shaderProgram.Activate();
-    glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-    glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+    // glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    // glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
+    // glm::mat4 lightModel = glm::mat4(1.0f);
+    // lightModel = glm::translate(lightModel, lightPos);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -68,11 +65,16 @@ int main()
 
     Model model("res/models/monkey/monkey.gltf", "Monkey");
     Model model2("res/models/sphere/sphere.gltf", "Sphere");
+    Model light("res/models/sphere/sphere.gltf", "Light");
+
+    light.translation = glm::vec3(0.0f, 3.0f, 0.0f);
+    light.scale = glm::vec3(0.1f, 0.1f, 0.1f);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
+    // ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
@@ -83,6 +85,9 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        shaderProgram.Activate();
+        glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), light.color.x, light.color.y, light.color.z, 1.0f);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), light.translation.x, light.translation.y, light.translation.z);
         camera.Inputs(window);
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
@@ -90,14 +95,22 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("Stats");
+        ImGui::Begin("Global", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
+
+        // ImGui::TextColored(ImVec4(255.0f, 128.0f, 0.0f, 255.0f), "Directional Light");
+        // ImGui::DragFloat3("Position", &light.translation[0], 0.1f);
+        // ImGui::ColorEdit3("Color", &light.color[0]);
+
+        ImGui::TextColored(ImVec4(128.0f, 0.0f, 128.0f, 255.0f), "Stats");
         ImGui::Text("FPS: %.1f", io.Framerate);
         ImGui::Text("Frame time: %.3f ms", 1000.0f / io.Framerate);
+
         ImGui::End();
 
         // Draw the model
         model.Draw(shaderProgram, camera);
         model2.Draw(shaderProgram, camera);
+        light.Draw(lightShader, camera);
 
         // Render ImGui frame
         ImGui::Render();

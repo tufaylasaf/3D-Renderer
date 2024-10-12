@@ -9,6 +9,7 @@ in vec2 texCoord;
 uniform sampler2D diffuse0;
 uniform sampler2D specular0;
 
+uniform vec3 color;
 uniform vec4 lightColor;
 uniform vec3 lightPos;
 uniform vec3 camPos;
@@ -46,7 +47,7 @@ vec4 pointLight()
 	}
 
 	// return (texture(diffuse0, texCoord) * (diffuse * inten + ambient) + texture(specular0, texCoord).r * specular * inten) * lightColor;
-	return vec4(1.0f,1.0f,1.0f,1.0f) * (diffuse * inten + ambient + specular * inten) * lightColor;
+	return vec4(color,1.0f) * (diffuse * inten + ambient + specular * inten) * lightColor;
 }
 
 vec4 direcLight()
@@ -56,7 +57,7 @@ vec4 direcLight()
 
 
 	vec3 normal = normalize(Normal);
-	vec3 lightDirection = normalize(vec3(1.0f, 1.0f, 0.0f));
+	vec3 lightDirection = normalize(lightPos - crntPos);
 	float diffuse = max(dot(normal, lightDirection), 0.0f);
 
 
@@ -67,7 +68,7 @@ vec4 direcLight()
 	float specular = specAmount * specularLight;
 
 	// return (texture(diffuse0, texCoord) * (diffuse + ambient) + texture(specular0, texCoord).r * specular) * lightColor;
-	return vec4(1.0f,1.0f,1.0f,1.0f) * (diffuse + ambient + specular) * lightColor;
+	return vec4(color,1.0f) * (diffuse + ambient + specular) * lightColor;
 }
 
 vec4 spotLight()

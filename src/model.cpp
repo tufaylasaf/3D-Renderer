@@ -16,15 +16,17 @@ void Model::Draw(Shader &shader, Camera &camera)
 {
     for (unsigned int i = 0; i < meshes.size(); i++)
     {
-        meshes[i].Mesh::Draw(shader, camera, translation, rotation, scale, matricesMeshes[i]);
+        meshes[i].Mesh::Draw(shader, camera, translation, rotation, scale, color, matricesMeshes[i]);
     }
 
     // ImGui code to manipulate translation, rotation, and scale
-    ImGui::Begin(name.c_str());
+    ImGui::Begin(name.c_str(), nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
 
+    // Position controls
     ImGui::Text("Position");
     ImGui::DragFloat3("Position", &translation[0], 0.1f);
 
+    // Rotation controls
     glm::vec3 euler = glm::degrees(glm::eulerAngles(rotation)); // Convert quaternion to Euler angles in degrees
     ImGui::Text("Rotation (Euler Angles)");
     if (ImGui::DragFloat3("Rotation", &euler[0], 1.0f))
@@ -32,8 +34,13 @@ void Model::Draw(Shader &shader, Camera &camera)
         rotation = glm::quat(glm::radians(euler)); // Convert back to radians and quaternion
     }
 
+    // Scale controls
     ImGui::Text("Scale");
     ImGui::DragFloat3("Scale", &scale[0], 0.1f);
+
+    // Color controls
+    ImGui::Text("Color");
+    ImGui::ColorEdit3("Model Color", &color[0]); // Add color wheel for model color
 
     ImGui::End();
 }
