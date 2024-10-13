@@ -99,7 +99,10 @@ int main()
 
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
-    Model light("res/models/Shapes/sphere.gltf", "Light");
+    Model dlight("res/models/Shapes/sphere.gltf", "DLight");
+    Model pLight("res/models/Shapes/sphere.gltf", "PLight");
+    Model sLight("res/models/Shapes/sphere.gltf", "SLight");
+    glm::vec3 spotLightDirection = glm::vec3(1.0f, 1.0f, 1.0f);
 
     Model sphere("res/models/Shapes/sphere.gltf", "Sphere");
     Model icoSphere("res/models/Shapes/icosphere.gltf", "Icosphere");
@@ -191,11 +194,35 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shaderProgram.Activate();
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "light.ambient"), light.material.ambient.x, light.material.ambient.y, light.material.ambient.z);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "light.diffuse"), light.material.diffuse.x, light.material.diffuse.y, light.material.diffuse.z);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "light.specular"), light.material.specular.x, light.material.specular.y, light.material.specular.z);
+        // Direct Light
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "dLight.ambient"), dlight.material.ambient.x, dlight.material.ambient.y, dlight.material.ambient.z);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "dLight.diffuse"), dlight.material.diffuse.x, dlight.material.diffuse.y, dlight.material.diffuse.z);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "dLight.specular"), dlight.material.specular.x, dlight.material.specular.y, dlight.material.specular.z);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "dLight.direction"), spotLightDirection.x, spotLightDirection.y, spotLightDirection.z);
 
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "light.position"), light.translation.x, light.translation.y, light.translation.z);
+        // Point Light
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "pLight[0].ambient"), pLight.material.ambient.x, pLight.material.ambient.y, pLight.material.ambient.z);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "pLight[0].diffuse"), pLight.material.diffuse.x, pLight.material.diffuse.y, pLight.material.diffuse.z);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "pLight[0].specular"), pLight.material.specular.x, pLight.material.specular.y, pLight.material.specular.z);
+
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "pLight[0].position"), pLight.translation.x, pLight.translation.y, pLight.translation.z);
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "pLight[0].constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "pLight[0].linear"), 0.35f);
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "pLight[0].quadratic"), 0.44f);
+
+        // Spotlight
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "sLight.ambient"), sLight.material.ambient.x, sLight.material.ambient.y, sLight.material.ambient.z);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "sLight.diffuse"), sLight.material.diffuse.x, sLight.material.diffuse.y, sLight.material.diffuse.z);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "sLight.specular"), sLight.material.specular.x, sLight.material.specular.y, sLight.material.specular.z);
+
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "sLight.position"), sLight.translation.x, sLight.translation.y, sLight.translation.z);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "sLight.direction"), spotLightDirection.x, spotLightDirection.y, spotLightDirection.z);
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "sLight.constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "sLight.linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "sLight.quadratic"), 0.032f);
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "sLight.cutOff"), glm::cos(glm::radians(20.0f)));
+        glUniform1f(glGetUniformLocation(shaderProgram.ID, "sLight.outerCutOff"), glm::cos(glm::radians(40.0f)));
+
         camera.Inputs(window);
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
@@ -208,10 +235,13 @@ int main()
         ImGui::TextColored(ImVec4(128.0f, 0.0f, 128.0f, 255.0f), "Stats");
         ImGui::Text("FPS: %.1f", io.Framerate);
         ImGui::Text("Frame time: %.3f ms", 1000.0f / io.Framerate);
+        ImGui::DragFloat3("SpotLight Direction", &spotLightDirection[0], 0.1f);
 
         ImGui::End();
 
-        light.Draw(lightShader, camera);
+        dlight.Draw(lightShader, camera);
+        sLight.Draw(lightShader, camera);
+        pLight.Draw(lightShader, camera);
 
         sphere.Draw(shaderProgram, camera);
         icoSphere.Draw(shaderProgram, camera);
@@ -250,7 +280,9 @@ int main()
         glfwPollEvents();
     }
 
-    light.SaveImGuiData("saveData/transforms.json");
+    dlight.SaveImGuiData("saveData/transforms.json");
+    pLight.SaveImGuiData("saveData/transforms.json");
+    sLight.SaveImGuiData("saveData/transforms.json");
 
     sphere.SaveImGuiData("saveData/transforms.json");
     icoSphere.SaveImGuiData("saveData/transforms.json");
