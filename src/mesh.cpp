@@ -23,7 +23,7 @@ void Mesh::Draw(
     glm::vec3 &translation,
     glm::quat &rotation,
     glm::vec3 &scale,
-    glm::vec3 &color,
+    Material &material,
     glm::mat4 matrix) // Pass by reference to allow modification
 {
     shader.Activate();
@@ -59,7 +59,10 @@ void Mesh::Draw(
     matrix = glm::scale(matrix, scale);
 
     glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(matrix));
-    glUniform3f(glGetUniformLocation(shader.ID, "color"), color.x, color.y, color.z);
+    glUniform3f(glGetUniformLocation(shader.ID, "material.ambient"), material.ambient.x, material.ambient.y, material.ambient.z);
+    glUniform3f(glGetUniformLocation(shader.ID, "material.diffuse"), material.diffuse.x, material.diffuse.y, material.diffuse.z);
+    glUniform3f(glGetUniformLocation(shader.ID, "material.specular"), material.specular.x, material.specular.y, material.specular.z);
+    glUniform1f(glGetUniformLocation(shader.ID, "material.shininess"), material.shininess);
 
     // Draw the mesh
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

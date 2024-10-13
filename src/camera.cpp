@@ -37,7 +37,7 @@ void Camera::Inputs(GLFWwindow *window)
         return; // Exit the function early, no camera input when interacting with ImGui
     }
 
-    // Camera position movement
+    // Camera position movement (WASD)
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
         Position += speed * Orientation;
@@ -62,6 +62,8 @@ void Camera::Inputs(GLFWwindow *window)
     {
         Position += speed * -Up;
     }
+
+    // Adjust speed with shift key
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
     {
         speed = 0.004f;
@@ -71,9 +73,11 @@ void Camera::Inputs(GLFWwindow *window)
         speed = 0.001f;
     }
 
-    // Mouse input for camera rotation
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    // Check if any mouse button (left or right) is pressed
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ||
+        glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
     {
+        // Hide the cursor when any mouse button is pressed
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
         if (firstClick)
@@ -86,22 +90,53 @@ void Camera::Inputs(GLFWwindow *window)
         double mouseY;
         glfwGetCursorPos(window, &mouseX, &mouseY);
 
-        float rotX = sensitivity * (float)(mouseY - (height / 2)) / height;
-        float rotY = sensitivity * (float)(mouseX - (width / 2)) / width;
-
-        glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
-
-        if (abs(glm::angle(newOrientation, Up) - glm::radians(90.0f)) <= glm::radians(85.0f))
+        // Handle camera rotation if left mouse button is pressed
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
         {
-            Orientation = newOrientation;
+            float rotX = sensitivity * (float)(mouseY - (height / 2)) / height;
+            float rotY = sensitivity * (float)(mouseX - (width / 2)) / width;
+
+            glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
+
+            if (abs(glm::angle(newOrientation, Up) - glm::radians(90.0f)) <= glm::radians(85.0f))
+            {
+                Orientation = newOrientation;
+            }
+
+            Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
         }
 
-        Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
+        // Handle camera rotation around origin if right mouse button is pressed
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+        {
+            float rotX = sensitivity * (float)(mouseY - (height / 2)) / height;
+            float rotY = sensitivity * (float)(mouseX - (width / 2)) / width;
 
+            // Calculate the radius (distance from origin)
+            float radius = glm::length(Position);
+
+            // Horizontal rotation (yaw) around the Y axis
+            float yawAngle = glm::radians(-rotY);
+            Position = glm::rotateY(Position, yawAngle);
+
+            // Vertical rotation (pitch) around the right axis (cross of up and orientation)
+            glm::vec3 right = glm::normalize(glm::cross(Up, Orientation));
+            float pitchAngle = glm::radians(-rotX);
+            Position = glm::rotate(Position, pitchAngle, right);
+
+            // Maintain the same distance (radius) from the origin (0,0,0)
+            Position = glm::normalize(Position) * radius;
+
+            // Always look towards the origin (0, 0, 0)
+            Orientation = glm::normalize(-Position);
+        }
+
+        // Reset the mouse position to the center
         glfwSetCursorPos(window, (width / 2), (height / 2));
     }
-    else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+    else
     {
+        // Show the cursor again when neither mouse button is pressed
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         firstClick = true;
     }

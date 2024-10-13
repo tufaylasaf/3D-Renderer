@@ -8,6 +8,14 @@
 #include "camera.h"
 #include "texture.h"
 
+struct Material
+{
+    glm::vec3 ambient = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 specular = glm::vec3(1.0f, 1.0f, 1.0f);
+    float shininess = 32;
+};
+
 class Mesh
 {
 public:
@@ -24,7 +32,7 @@ public:
         glm::vec3 &translation,
         glm::quat &rotation,
         glm::vec3 &scale,
-        glm::vec3 &color,
+        Material &material,
         glm::mat4 matrix = glm::mat4(1.0f));
 };
 
