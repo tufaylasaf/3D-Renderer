@@ -15,33 +15,12 @@
     "nodes" : [
         {
             "mesh" : 0,
-            "name" : "Icosphere",
-            "scale" : [
-                0.5,
-                0.5,
-                0.5
-            ]
-        }
-    ],
-    "materials" : [
-        {
-            "doubleSided" : true,
-            "name" : "Material.001",
-            "pbrMetallicRoughness" : {
-                "baseColorFactor" : [
-                    0.4401646554470062,
-                    0,
-                    0.8000000715255737,
-                    1
-                ],
-                "metallicFactor" : 0,
-                "roughnessFactor" : 0.5
-            }
+            "name" : "Sphere"
         }
     ],
     "meshes" : [
         {
-            "name" : "Icosphere",
+            "name" : "Sphere",
             "primitives" : [
                 {
                     "attributes" : {
@@ -49,8 +28,7 @@
                         "TEXCOORD_0" : 1,
                         "NORMAL" : 2
                     },
-                    "indices" : 3,
-                    "material" : 0
+                    "indices" : 3
                 }
             ]
         }
@@ -59,67 +37,67 @@
         {
             "bufferView" : 0,
             "componentType" : 5126,
-            "count" : 240,
+            "count" : 559,
             "max" : [
-                0.9510578513145447,
+                0.9999997019767761,
                 1,
-                0.9999999403953552
+                0.9999993443489075
             ],
             "min" : [
-                -0.9510578513145447,
+                -0.9999990463256836,
                 -1,
-                -0.9999999403953552
+                -1
             ],
             "type" : "VEC3"
         },
         {
             "bufferView" : 1,
             "componentType" : 5126,
-            "count" : 240,
+            "count" : 559,
             "type" : "VEC2"
         },
         {
             "bufferView" : 2,
             "componentType" : 5126,
-            "count" : 240,
+            "count" : 559,
             "type" : "VEC3"
         },
         {
             "bufferView" : 3,
             "componentType" : 5123,
-            "count" : 240,
+            "count" : 2880,
             "type" : "SCALAR"
         }
     ],
     "bufferViews" : [
         {
             "buffer" : 0,
-            "byteLength" : 2880,
+            "byteLength" : 6708,
             "byteOffset" : 0,
             "target" : 34962
         },
         {
             "buffer" : 0,
-            "byteLength" : 1920,
-            "byteOffset" : 2880,
+            "byteLength" : 4472,
+            "byteOffset" : 6708,
             "target" : 34962
         },
         {
             "buffer" : 0,
-            "byteLength" : 2880,
-            "byteOffset" : 4800,
+            "byteLength" : 6708,
+            "byteOffset" : 11180,
             "target" : 34962
         },
         {
             "buffer" : 0,
-            "byteLength" : 480,
-            "byteOffset" : 7680,
+            "byteLength" : 5760,
+            "byteOffset" : 17888,
             "target" : 34963
         }
     ],
     "buffers" : [
         {
-            "byteLength" : 8160,
+            "byteLength" : 23648,
             "uri" : "sphere.bin"
         }
     ]
