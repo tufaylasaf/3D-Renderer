@@ -3,48 +3,18 @@
 #include <imgui_impl_opengl3.h>
 
 #include "Model.h"
+#include "light.h"
 
 const unsigned int width = 1600;
 const unsigned int height = 900;
 
 const unsigned int samples = 8;
 
-float skyboxVertices[] =
-    {
-        //   Coordinates
-        -1.0f, -1.0f, 1.0f,  //        7--------6
-        1.0f, -1.0f, 1.0f,   //       /|       /|
-        1.0f, -1.0f, -1.0f,  //      4--------5 |
-        -1.0f, -1.0f, -1.0f, //      | |      | |
-        -1.0f, 1.0f, 1.0f,   //      | 3------|-2
-        1.0f, 1.0f, 1.0f,    //      |/       |/
-        1.0f, 1.0f, -1.0f,   //      0--------1
-        -1.0f, 1.0f, -1.0f};
-
-unsigned int skyboxIndices[] =
-    {
-        // Right
-        1, 2, 6,
-        6, 5, 1,
-        // Left
-        0, 4, 7,
-        7, 3, 0,
-        // Top
-        4, 5, 6,
-        6, 7, 4,
-        // Bottom
-        0, 3, 2,
-        2, 1, 0,
-        // Back
-        0, 1, 5,
-        5, 4, 0,
-        // Front
-        3, 7, 6,
-        6, 2, 3};
+std::vector<Model *> Model::models;
+std::vector<Light *> Light::lights;
 
 int main()
 {
-
     glfwInit();
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -99,83 +69,15 @@ int main()
 
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
-    Model dlight("res/models/Shapes/sphere.gltf", "DLight");
-    Model pLight("res/models/Shapes/sphere.gltf", "PLight");
-    Model sLight("res/models/Shapes/sphere.gltf", "SLight");
-    glm::vec3 spotLightDirection = glm::vec3(1.0f, 1.0f, 1.0f);
+    Light dlight("res/models/Shapes/sphere.gltf", "DLight", "Directional");
+    Light pLight("res/models/Shapes/sphere.gltf", "PLight", "Point");
+    Light sLight("res/models/Shapes/sphere.gltf", "SLight", "Spot");
 
-    Model sphere("res/models/Shapes/sphere.gltf", "Sphere");
-    Model icoSphere("res/models/Shapes/icosphere.gltf", "Icosphere");
-    Model abstract("res/models/Shapes/abstract.gltf", "Abstract");
-    Model cube("res/models/Shapes/cube.gltf", "Cube");
-    Model bg("res/models/Shapes/bg.gltf", "Background");
-
-    {
-        unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
-        glGenVertexArrays(1, &skyboxVAO);
-        glGenBuffers(1, &skyboxVBO);
-        glGenBuffers(1, &skyboxEBO);
-        glBindVertexArray(skyboxVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxEBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), &skyboxIndices, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-        // All the faces of the cubemap (make sure they are in this exact order)
-        std::string facesCubemap[6] =
-            {
-                "res/skybox/right.jpg",
-                "res/skybox/left.jpg",
-                "res/skybox/top.jpg",
-                "res/skybox/bottom.jpg",
-                "res/skybox/front.jpg",
-                "res/skybox/back.jpg"};
-
-        // Creates the cubemap texture object
-        unsigned int cubemapTexture;
-        glGenTextures(1, &cubemapTexture);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        // These are very important to prevent seams
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        // This might help with seams on some systems
-        // glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-
-        // Cycles through all the textures and attaches them to the cubemap object
-        for (unsigned int i = 0; i < 6; i++)
-        {
-            int width, height, nrChannels;
-            unsigned char *data = stbi_load(facesCubemap[i].c_str(), &width, &height, &nrChannels, 0);
-            if (data)
-            {
-                stbi_set_flip_vertically_on_load(false);
-                glTexImage2D(
-                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                    0,
-                    GL_RGB,
-                    width,
-                    height,
-                    0,
-                    GL_RGB,
-                    GL_UNSIGNED_BYTE,
-                    data);
-                stbi_image_free(data);
-            }
-            else
-            {
-                std::cout << "Failed to load texture: " << facesCubemap[i] << std::endl;
-                stbi_image_free(data);
-            }
-        }
-    }
+    Model sphere("res/models/Shapes/sphere.gltf", "Sphere", false);
+    Model icoSphere("res/models/Shapes/icosphere.gltf", "Icosphere", false);
+    Model abstract("res/models/Shapes/abstract.gltf", "Abstract", false);
+    Model cube("res/models/Shapes/cube.gltf", "Cube", false);
+    Model bg("res/models/Shapes/bg.gltf", "Background", false);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -193,36 +95,6 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        shaderProgram.Activate();
-        // Direct Light
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "dLight.ambient"), dlight.material.ambient.x, dlight.material.ambient.y, dlight.material.ambient.z);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "dLight.diffuse"), dlight.material.diffuse.x, dlight.material.diffuse.y, dlight.material.diffuse.z);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "dLight.specular"), dlight.material.specular.x, dlight.material.specular.y, dlight.material.specular.z);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "dLight.direction"), spotLightDirection.x, spotLightDirection.y, spotLightDirection.z);
-
-        // Point Light
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "pLight[0].ambient"), pLight.material.ambient.x, pLight.material.ambient.y, pLight.material.ambient.z);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "pLight[0].diffuse"), pLight.material.diffuse.x, pLight.material.diffuse.y, pLight.material.diffuse.z);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "pLight[0].specular"), pLight.material.specular.x, pLight.material.specular.y, pLight.material.specular.z);
-
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "pLight[0].position"), pLight.translation.x, pLight.translation.y, pLight.translation.z);
-        glUniform1f(glGetUniformLocation(shaderProgram.ID, "pLight[0].constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(shaderProgram.ID, "pLight[0].linear"), 0.35f);
-        glUniform1f(glGetUniformLocation(shaderProgram.ID, "pLight[0].quadratic"), 0.44f);
-
-        // Spotlight
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "sLight.ambient"), sLight.material.ambient.x, sLight.material.ambient.y, sLight.material.ambient.z);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "sLight.diffuse"), sLight.material.diffuse.x, sLight.material.diffuse.y, sLight.material.diffuse.z);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "sLight.specular"), sLight.material.specular.x, sLight.material.specular.y, sLight.material.specular.z);
-
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "sLight.position"), sLight.translation.x, sLight.translation.y, sLight.translation.z);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "sLight.direction"), spotLightDirection.x, spotLightDirection.y, spotLightDirection.z);
-        glUniform1f(glGetUniformLocation(shaderProgram.ID, "sLight.constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(shaderProgram.ID, "sLight.linear"), 0.09f);
-        glUniform1f(glGetUniformLocation(shaderProgram.ID, "sLight.quadratic"), 0.032f);
-        glUniform1f(glGetUniformLocation(shaderProgram.ID, "sLight.cutOff"), glm::cos(glm::radians(20.0f)));
-        glUniform1f(glGetUniformLocation(shaderProgram.ID, "sLight.outerCutOff"), glm::cos(glm::radians(40.0f)));
-
         camera.Inputs(window);
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
@@ -235,42 +107,26 @@ int main()
         ImGui::TextColored(ImVec4(128.0f, 0.0f, 128.0f, 255.0f), "Stats");
         ImGui::Text("FPS: %.1f", io.Framerate);
         ImGui::Text("Frame time: %.3f ms", 1000.0f / io.Framerate);
-        ImGui::DragFloat3("SpotLight Direction", &spotLightDirection[0], 0.1f);
 
         ImGui::End();
 
-        dlight.Draw(lightShader, camera);
-        sLight.Draw(lightShader, camera);
-        pLight.Draw(lightShader, camera);
+        // dlight.Draw(lightShader, shaderProgram, camera);
+        // sLight.Draw(lightShader, shaderProgram, camera);
+        // pLight.Draw(lightShader, shaderProgram, camera);
 
-        sphere.Draw(shaderProgram, camera);
-        icoSphere.Draw(shaderProgram, camera);
-        abstract.Draw(shaderProgram, camera);
-        cube.Draw(shaderProgram, camera);
-        bg.Draw(shaderProgram, camera);
+        ImGui::Begin("Lights", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
+        for (Light *light : Light::lights)
+        {
+            light->Draw(lightShader, shaderProgram, camera);
+        }
+        ImGui::End();
 
-        // glDepthFunc(GL_LEQUAL);
-
-        // skyboxShader.Activate();
-        // glm::mat4 view = glm::mat4(1.0f);
-        // glm::mat4 projection = glm::mat4(1.0f);
-        // // We make the mat4 into a mat3 and then a mat4 again in order to get rid of the last row and column
-        // // The last row and column affect the translation of the skybox (which we don't want to affect)
-        // view = glm::mat4(glm::mat3(glm::lookAt(camera.Position, camera.Position + camera.Orientation, camera.Up)));
-        // projection = glm::perspective(glm::radians(45.0f), (float)width / height, 0.1f, 100.0f);
-        // glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        // glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-        // // Draws the cubemap as the last object so we can save a bit of performance by discarding all fragments
-        // // where an object is present (a depth of 1.0f will always fail against any object's depth value)
-        // glBindVertexArray(skyboxVAO);
-        // glActiveTexture(GL_TEXTURE0);
-        // glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        // glBindVertexArray(0);
-
-        // // Switch back to the normal depth function
-        // glDepthFunc(GL_LESS);
+        ImGui::Begin("Objects", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
+        for (Model *model : Model::models)
+        {
+            model->Draw(shaderProgram, camera);
+        }
+        ImGui::End();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

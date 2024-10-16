@@ -1,6 +1,6 @@
 #include "Model.h"
 
-Model::Model(const char *file, std::string n)
+Model::Model(const char *file, std::string n, bool isLight)
 {
     name = n;
     std::string text = get_file_contents(file);
@@ -12,6 +12,9 @@ Model::Model(const char *file, std::string n)
     traverseNode(0);
 
     LoadImGuiData("saveData/transforms.json");
+
+    if (!isLight)
+        models.push_back(this);
 }
 
 void Model::Draw(Shader &shader, Camera &camera)
@@ -21,33 +24,31 @@ void Model::Draw(Shader &shader, Camera &camera)
         meshes[i].Mesh::Draw(shader, camera, translation, rotation, scale, material, matricesMeshes[i]);
     }
 
-    // ImGui code to manipulate translation, rotation, and scale
-    ImGui::Begin(name.c_str(), nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
-
-    // Position controls
-    ImGui::Text("Position");
-    ImGui::DragFloat3("Position", &translation[0], 0.1f);
-
-    // Rotation controls
-    glm::vec3 euler = glm::degrees(glm::eulerAngles(rotation)); // Convert quaternion to Euler angles in degrees
-    ImGui::Text("Rotation (Euler Angles)");
-    if (ImGui::DragFloat3("Rotation", &euler[0], 1.0f))
+    if (ImGui::CollapsingHeader(name.c_str()))
     {
-        rotation = glm::quat(glm::radians(euler)); // Convert back to radians and quaternion
+        // Position controls
+        ImGui::Text("Position");
+        ImGui::DragFloat3("Position", &translation[0], 0.1f);
+
+        // Rotation controls
+        glm::vec3 euler = glm::degrees(glm::eulerAngles(rotation)); // Convert quaternion to Euler angles in degrees
+        ImGui::Text("Rotation (Euler Angles)");
+        if (ImGui::DragFloat3("Rotation", &euler[0], 1.0f))
+        {
+            rotation = glm::quat(glm::radians(euler)); // Convert back to radians and quaternion
+        }
+
+        // Scale controls
+        ImGui::Text("Scale");
+        ImGui::DragFloat3("Scale", &scale[0], 0.1f);
+
+        // Color controls
+        ImGui::Text("Material");
+        ImGui::ColorEdit3("Ambient", &material.ambient[0]);
+        ImGui::ColorEdit3("Diffuse", &material.diffuse[0]);
+        ImGui::ColorEdit3("Specular", &material.specular[0]);
+        ImGui::SliderFloat("Shininess", &material.shininess, 0, 256);
     }
-
-    // Scale controls
-    ImGui::Text("Scale");
-    ImGui::DragFloat3("Scale", &scale[0], 0.1f);
-
-    // Color controls
-    ImGui::Text("Material");
-    ImGui::ColorEdit3("Ambient", &material.ambient[0]);
-    ImGui::ColorEdit3("Diffuse", &material.diffuse[0]);
-    ImGui::ColorEdit3("Specular", &material.specular[0]);
-    ImGui::SliderFloat("Shininess", &material.shininess, 0, 256);
-
-    ImGui::End();
 }
 
 void Model::SaveImGuiData(const std::string &filename)
