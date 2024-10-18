@@ -23,7 +23,10 @@ void Model::Draw(Shader &shader, Camera &camera)
     {
         meshes[i].Mesh::Draw(shader, camera, translation, rotation, scale, material, matricesMeshes[i]);
     }
+}
 
+void Model::UI()
+{
     if (ImGui::CollapsingHeader(name.c_str()))
     {
         // Position controls

@@ -24,6 +24,8 @@ public:
 
     void Draw(Shader &shader, Camera &camera);
 
+    void UI();
+
     void SaveImGuiData(const std::string &filename);
 
     void LoadImGuiData(const std::string &filename);

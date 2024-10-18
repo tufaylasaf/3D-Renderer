@@ -19,7 +19,9 @@ public:
 
     Light(const char *file, std::string n, std::string t) : type(t), Model(file, n, true) { lights.push_back(this); }
 
-    void Draw(Shader &objectShader, Shader &lightShader, Camera &camera);
+    void Draw(Shader &objectShader, Shader &lightShader, Camera &camera, bool onlySetShader);
+
+    void UI();
 
 private:
     void Directional(Shader &shader);
