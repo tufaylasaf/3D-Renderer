@@ -30,27 +30,23 @@ void Model::UI()
     if (ImGui::CollapsingHeader(name.c_str()))
     {
         // Position controls
-        ImGui::Text("Position");
+        ImGui::Text("Transform");
         ImGui::DragFloat3("Position", &translation[0], 0.1f);
 
         // Rotation controls
         glm::vec3 euler = glm::degrees(glm::eulerAngles(rotation)); // Convert quaternion to Euler angles in degrees
-        ImGui::Text("Rotation (Euler Angles)");
         if (ImGui::DragFloat3("Rotation", &euler[0], 1.0f))
         {
             rotation = glm::quat(glm::radians(euler)); // Convert back to radians and quaternion
         }
-
-        // Scale controls
-        ImGui::Text("Scale");
         ImGui::DragFloat3("Scale", &scale[0], 0.1f);
 
         // Color controls
         ImGui::Text("Material");
-        ImGui::ColorEdit3("Ambient", &material.ambient[0]);
-        ImGui::ColorEdit3("Diffuse", &material.diffuse[0]);
-        ImGui::ColorEdit3("Specular", &material.specular[0]);
-        ImGui::SliderFloat("Shininess", &material.shininess, 0, 256);
+        ImGui::ColorEdit3("Albedo", &material.albedo[0]);
+        ImGui::SliderFloat("Metallic", &material.metallic, 0.0f, 1.0f);
+        ImGui::SliderFloat("Roughness", &material.roughness, 0.0f, 1.0f);
+        ImGui::SliderFloat("AO", &material.ao, 0.0f, 1.0f);
     }
 }
 
@@ -73,10 +69,10 @@ void Model::SaveImGuiData(const std::string &filename)
     saveData[name]["rotation"] = {euler.x, euler.y, euler.z};
 
     saveData[name]["scale"] = {scale.x, scale.y, scale.z};
-    saveData[name]["material"]["ambient"] = {material.ambient.x, material.ambient.y, material.ambient.z};
-    saveData[name]["material"]["diffuse"] = {material.diffuse.x, material.diffuse.y, material.diffuse.z};
-    saveData[name]["material"]["specular"] = {material.specular.x, material.specular.y, material.specular.z};
-    saveData[name]["material"]["shininess"] = material.shininess;
+    saveData[name]["material"]["albedo"] = {material.albedo.x, material.albedo.y, material.albedo.z};
+    saveData[name]["material"]["roughness"] = material.roughness;
+    saveData[name]["material"]["metallic"] = material.metallic;
+    saveData[name]["material"]["ao"] = material.ao;
 
     // Write the updated data to the file
     std::ofstream outFile(filename);
@@ -134,33 +130,27 @@ void Model::LoadImGuiData(const std::string &filename)
             // Load material properties
             if (loadData[name].contains("material"))
             {
-                if (loadData[name]["material"].contains("ambient"))
+                if (loadData[name]["material"].contains("albedo"))
                 {
-                    material.ambient = glm::vec3(
-                        loadData[name]["material"]["ambient"][0],
-                        loadData[name]["material"]["ambient"][1],
-                        loadData[name]["material"]["ambient"][2]);
+                    material.albedo = glm::vec3(
+                        loadData[name]["material"]["albedo"][0],
+                        loadData[name]["material"]["albedo"][1],
+                        loadData[name]["material"]["albedo"][2]);
                 }
 
-                if (loadData[name]["material"].contains("diffuse"))
+                if (loadData[name]["material"].contains("roughness"))
                 {
-                    material.diffuse = glm::vec3(
-                        loadData[name]["material"]["diffuse"][0],
-                        loadData[name]["material"]["diffuse"][1],
-                        loadData[name]["material"]["diffuse"][2]);
+                    material.roughness = loadData[name]["material"]["roughness"];
                 }
 
-                if (loadData[name]["material"].contains("specular"))
+                if (loadData[name]["material"].contains("metallic"))
                 {
-                    material.specular = glm::vec3(
-                        loadData[name]["material"]["specular"][0],
-                        loadData[name]["material"]["specular"][1],
-                        loadData[name]["material"]["specular"][2]);
+                    material.metallic = loadData[name]["material"]["metallic"];
                 }
 
-                if (loadData[name]["material"].contains("shininess"))
+                if (loadData[name]["material"].contains("ao"))
                 {
-                    material.shininess = loadData[name]["material"]["shininess"];
+                    material.ao = loadData[name]["material"]["ao"];
                 }
             }
         }

@@ -66,11 +66,10 @@ int main()
     Shader depthShader("res/shaders/depth.vert", "res/shaders/depth.frag");
 
     Shader pbrShader("res/shaders/default.vert", "res/shaders/pbr.frag");
-    glm::vec3 albedo = glm::vec3(0, 0, 0);
-    float metallic, roughness, ao = 0;
 
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
+    Light dLight("res/models/Shapes/sphere.gltf", "DLight", "Directional");
     Light pLight("res/models/Shapes/sphere.gltf", "PLight", "Point");
     Light pLight2("res/models/Shapes/sphere.gltf", "PLight2", "Point");
     Light pLight3("res/models/Shapes/sphere.gltf", "PLight3", "Point");
@@ -161,12 +160,6 @@ int main()
         glBindTexture(GL_TEXTURE_2D, shadowMap);
         glUniform1i(glGetUniformLocation(shaderProgram.ID, "shadowMap"), 0);
 
-        pbrShader.Activate();
-        glUniform3f(glGetUniformLocation(pbrShader.ID, "albedo"), albedo.x, albedo.y, albedo.z);
-        glUniform1f(glGetUniformLocation(pbrShader.ID, "metallic"), metallic);
-        glUniform1f(glGetUniformLocation(pbrShader.ID, "roughness"), roughness);
-        glUniform1f(glGetUniformLocation(pbrShader.ID, "ao"), ao);
-
         for (Model *model : Model::models)
         {
             model->Draw(pbrShader, camera);
@@ -182,17 +175,6 @@ int main()
         ImGui::TextColored(ImVec4(128.0f, 0.0f, 128.0f, 255.0f), "Stats");
         ImGui::Text("FPS: %.1f", io.Framerate);
         ImGui::Text("Frame time: %.3f ms", 1000.0f / io.Framerate);
-        ImGui::Text("Material Properties");
-        ImGui::ColorEdit3("Albedo", &albedo[0]); // Control for Albedo color
-
-        // Metallic
-        ImGui::SliderFloat("Metallic", &metallic, 0.0f, 1.0f); // Control for Metallic
-
-        // Roughness
-        ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.0f); // Control for Roughness
-
-        // Ambient Occlusion (AO)
-        ImGui::SliderFloat("AO", &ao, 0.0f, 1.0f);
         ImGui::End();
 
         ImGui::Begin("Lights", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);

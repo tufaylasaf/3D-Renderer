@@ -10,10 +10,10 @@
 
 struct Material
 {
-    glm::vec3 ambient = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 specular = glm::vec3(1.0f, 1.0f, 1.0f);
-    float shininess = 32;
+    glm::vec3 albedo = glm::vec3(1.0f, 1.0f, 1.0f);
+    float roughness = 0.5f;
+    float metallic = 0.5f;
+    float ao = 32;
 };
 
 class Mesh

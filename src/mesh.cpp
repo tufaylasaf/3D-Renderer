@@ -59,10 +59,10 @@ void Mesh::Draw(
     matrix = glm::scale(matrix, scale);
 
     glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(matrix));
-    // glUniform3f(glGetUniformLocation(shader.ID, "material.ambient"), material.ambient.x, material.ambient.y, material.ambient.z);
-    glUniform3f(glGetUniformLocation(shader.ID, "material.diffuse"), material.diffuse.x, material.diffuse.y, material.diffuse.z);
-    glUniform3f(glGetUniformLocation(shader.ID, "material.specular"), material.specular.x, material.specular.y, material.specular.z);
-    glUniform1f(glGetUniformLocation(shader.ID, "material.shininess"), material.shininess);
+    glUniform3f(glGetUniformLocation(shader.ID, "material.albedo"), material.albedo.x, material.albedo.y, material.albedo.z);
+    glUniform1f(glGetUniformLocation(shader.ID, "material.metallic"), material.metallic);
+    glUniform1f(glGetUniformLocation(shader.ID, "material.roughness"), material.roughness);
+    glUniform1f(glGetUniformLocation(shader.ID, "material.ao"), material.ao);
 
     // Draw the mesh
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

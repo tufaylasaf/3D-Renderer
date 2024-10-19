@@ -27,27 +27,12 @@ void Light::UI()
     if (ImGui::CollapsingHeader(name.c_str()))
     {
         // Position controls
-        ImGui::Text("Position");
+        ImGui::Text("Transform");
         ImGui::DragFloat3("Position", &translation[0], 0.1f);
 
-        // Rotation controls
-        glm::vec3 euler = glm::degrees(glm::eulerAngles(rotation)); // Convert quaternion to Euler angles in degrees
-        ImGui::Text("Rotation (Euler Angles)");
-        if (ImGui::DragFloat3("Rotation", &euler[0], 1.0f))
-        {
-            rotation = glm::quat(glm::radians(euler)); // Convert back to radians and quaternion
-        }
-
-        // Scale controls
-        ImGui::Text("Scale");
         ImGui::DragFloat3("Scale", &scale[0], 0.1f);
 
-        // Color controls
-        ImGui::Text("Material");
-        ImGui::ColorEdit3("Ambient", &material.ambient[0]);
-        ImGui::ColorEdit3("Diffuse", &material.diffuse[0]);
-        ImGui::ColorEdit3("Specular", &material.specular[0]);
-        ImGui::SliderFloat("Shininess", &material.shininess, 0, 256);
+        ImGui::ColorEdit3("Color", &material.albedo[0]);
 
         if (type == "Directional")
         {
@@ -76,9 +61,7 @@ void Light::UI()
 
 void Light::Directional(Shader &shader)
 {
-    glUniform3f(glGetUniformLocation(shader.ID, "dLight.ambient"), material.ambient.x, material.ambient.y, material.ambient.z);
-    glUniform3f(glGetUniformLocation(shader.ID, "dLight.diffuse"), material.diffuse.x, material.diffuse.y, material.diffuse.z);
-    glUniform3f(glGetUniformLocation(shader.ID, "dLight.specular"), material.specular.x, material.specular.y, material.specular.z);
+    glUniform3f(glGetUniformLocation(shader.ID, "dLight.color"), material.albedo.x, material.albedo.y, material.albedo.z);
     glUniform3f(glGetUniformLocation(shader.ID, "dLight.direction"), direction.x, direction.y, direction.z);
 }
 
@@ -86,9 +69,7 @@ void Light::Point(Shader &shader, int index)
 {
     std::string baseName = "pLight[" + std::to_string(index) + "].";
 
-    glUniform3f(glGetUniformLocation(shader.ID, (baseName + "ambient").c_str()), material.ambient.x, material.ambient.y, material.ambient.z);
-    glUniform3f(glGetUniformLocation(shader.ID, (baseName + "diffuse").c_str()), material.diffuse.x, material.diffuse.y, material.diffuse.z);
-    glUniform3f(glGetUniformLocation(shader.ID, (baseName + "specular").c_str()), material.specular.x, material.specular.y, material.specular.z);
+    glUniform3f(glGetUniformLocation(shader.ID, (baseName + "color").c_str()), material.albedo.x, material.albedo.y, material.albedo.z);
 
     glUniform3f(glGetUniformLocation(shader.ID, (baseName + "position").c_str()), translation.x, translation.y, translation.z);
     glUniform1f(glGetUniformLocation(shader.ID, (baseName + "constant").c_str()), constant);
@@ -98,9 +79,7 @@ void Light::Point(Shader &shader, int index)
 
 void Light::Spot(Shader &shader)
 {
-    glUniform3f(glGetUniformLocation(shader.ID, "sLight.ambient"), material.ambient.x, material.ambient.y, material.ambient.z);
-    glUniform3f(glGetUniformLocation(shader.ID, "sLight.diffuse"), material.diffuse.x, material.diffuse.y, material.diffuse.z);
-    glUniform3f(glGetUniformLocation(shader.ID, "sLight.specular"), material.specular.x, material.specular.y, material.specular.z);
+    glUniform3f(glGetUniformLocation(shader.ID, "sLight.ambient"), material.albedo.x, material.albedo.y, material.albedo.z);
 
     glUniform3f(glGetUniformLocation(shader.ID, "sLight.position"), translation.x, translation.y, translation.z);
     glUniform3f(glGetUniformLocation(shader.ID, "sLight.direction"), direction.x, direction.y, direction.z);
