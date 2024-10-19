@@ -24,6 +24,7 @@ void Camera::Matrix(Shader &shader, const char *uniform)
 {
 
     glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(cameraMatrix));
+    glUniform3f(glGetUniformLocation(shader.ID, "viewPos"), Position.x, Position.y, Position.z);
 }
 
 void Camera::Inputs(GLFWwindow *window)

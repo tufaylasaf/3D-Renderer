@@ -42,8 +42,6 @@ struct SpotLight {
     vec3 specular;       
 };
 
-#define NR_POINT_LIGHTS 1
-
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
@@ -51,7 +49,8 @@ in vec4 FragPosLightSpace;
 
 uniform vec3 viewPos;
 uniform DirLight dLight;
-uniform PointLight pLight[NR_POINT_LIGHTS];
+uniform float pointLightCount;
+uniform PointLight pLight[16];
 uniform SpotLight sLight;
 uniform Material material;
 
@@ -59,6 +58,23 @@ uniform sampler2D shadowMap;
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+
+void main()
+{    
+    vec3 norm = normalize(Normal);
+    vec3 viewDir = normalize(viewPos - FragPos);
+
+    // vec3 result = CalcDirLight(dLight, norm, viewDir);
+    vec3 result = vec3(0.0,0.0,0.0);
+
+    for(int i = 0; i < pointLightCount; i++)
+        result += CalcPointLight(pLight[i], norm, FragPos, viewDir);    
+
+    // result += CalcSpotLight(sLight, norm, FragPos, viewDir); 
+
+    
+    FragColor = vec4(result, 1.0);
+}
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 {
@@ -91,24 +107,10 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
     return shadow;
 }
 
-void main()
-{    
-    vec3 norm = normalize(Normal);
-    vec3 viewDir = normalize(viewPos - FragPos);
 
-    vec3 result = CalcDirLight(dLight, norm, viewDir);
-
-    // for(int i = 0; i < NR_POINT_LIGHTS; i++)
-    //     result += CalcPointLight(pLight[i], norm, FragPos, viewDir);    
-
-    // result += CalcSpotLight(sLight, norm, FragPos, viewDir); 
-
-    
-    FragColor = vec4(result, 1.0);
-}
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {
-    vec3 lightDir = normalize(light.direction - FragPos);
+    vec3 lightDir = normalize(-light.direction);
     
     float diff = max(dot(normal, lightDir), 0.0);
 
@@ -120,7 +122,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     vec3 specular = light.specular * spec * material.specular;
     float shadow = ShadowCalculation(FragPosLightSpace, normal, lightDir);
 
-    return (ambient + (1-shadow) * (diffuse + specular));
+    return (ambient + (diffuse + specular));
 }   
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {

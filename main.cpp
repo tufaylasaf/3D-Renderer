@@ -12,6 +12,7 @@ const unsigned int samples = 8;
 
 std::vector<Model *> Model::models;
 std::vector<Light *> Light::lights;
+int Light::pointLightCount = 0;
 
 int main()
 {
@@ -64,17 +65,21 @@ int main()
     Shader lightShader("res/shaders/light.vert", "res/shaders/light.frag");
     Shader depthShader("res/shaders/depth.vert", "res/shaders/depth.frag");
 
+    Shader pbrShader("res/shaders/default.vert", "res/shaders/pbr.frag");
+    glm::vec3 albedo = glm::vec3(0, 0, 0);
+    float metallic, roughness, ao = 0;
+
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
-    Light dlight("res/models/Shapes/sphere.gltf", "DLight", "Directional");
-    // Light pLight("res/models/Shapes/sphere.gltf", "PLight", "Point");
-    // Light sLight("res/models/Shapes/sphere.gltf", "SLight", "Spot");
+    Light pLight("res/models/Shapes/sphere.gltf", "PLight", "Point");
+    Light pLight2("res/models/Shapes/sphere.gltf", "PLight2", "Point");
+    Light pLight3("res/models/Shapes/sphere.gltf", "PLight3", "Point");
+    Light pLight4("res/models/Shapes/sphere.gltf", "PLight4", "Point");
 
     Model sphere("res/models/Shapes/sphere.gltf", "Sphere", false);
-    Model icoSphere("res/models/Shapes/icosphere.gltf", "Icosphere", false);
-    Model abstract("res/models/Shapes/abstract.gltf", "Abstract", false);
-    Model cube("res/models/Shapes/cube.gltf", "Cube", false);
-    Model bg("res/models/Shapes/bg.gltf", "Background", false);
+    Model sphere2("res/models/Shapes/sphere.gltf", "Sphere2", false);
+    Model sphere3("res/models/Shapes/sphere.gltf", "Sphere3", false);
+    Model sphere4("res/models/Shapes/sphere.gltf", "Sphere4", false);
 
     // ImGui Init
     IMGUI_CHECKVERSION();
@@ -114,25 +119,25 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        glEnable(GL_DEPTH_TEST);
-        // Matrices needed for the light's perspective
-        glm::mat4 orthgonalProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 75.0f);
-        glm::mat4 lightView = glm::lookAt(dlight.translation, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::mat4 lightProjection = orthgonalProjection * lightView;
+        // glEnable(GL_DEPTH_TEST);
+        // // Matrices needed for the light's perspective
+        // glm::mat4 orthgonalProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 75.0f);
+        // glm::mat4 lightView = glm::lookAt(dlight.translation, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        // glm::mat4 lightProjection = orthgonalProjection * lightView;
 
-        depthShader.Activate();
-        glUniformMatrix4fv(glGetUniformLocation(depthShader.ID, "lightProjection"), 1, GL_FALSE, glm::value_ptr(lightProjection));
-        // Preparations for the Shadow Map
-        glViewport(0, 0, shadowMapWidth, shadowMapHeight);
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
-        glClear(GL_DEPTH_BUFFER_BIT);
+        // depthShader.Activate();
+        // glUniformMatrix4fv(glGetUniformLocation(depthShader.ID, "lightProjection"), 1, GL_FALSE, glm::value_ptr(lightProjection));
+        // // Preparations for the Shadow Map
+        // glViewport(0, 0, shadowMapWidth, shadowMapHeight);
+        // glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
+        // glClear(GL_DEPTH_BUFFER_BIT);
 
-        for (Model *model : Model::models)
-        {
-            model->Draw(depthShader, camera);
-        }
+        // for (Model *model : Model::models)
+        // {
+        //     model->Draw(depthShader, camera);
+        // }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glViewport(0, 0, width, height);
 
@@ -145,20 +150,26 @@ int main()
 
         for (Light *light : Light::lights)
         {
-            light->Draw(lightShader, shaderProgram, camera, false);
+            light->Draw(lightShader, pbrShader, camera, false);
         }
 
-        shaderProgram.Activate();
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "lightProjection"), 1, GL_FALSE, glm::value_ptr(lightProjection));
+        // shaderProgram.Activate();
+        // glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "lightProjection"), 1, GL_FALSE, glm::value_ptr(lightProjection));
 
         // Bind the Shadow Map
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, shadowMap);
         glUniform1i(glGetUniformLocation(shaderProgram.ID, "shadowMap"), 0);
 
+        pbrShader.Activate();
+        glUniform3f(glGetUniformLocation(pbrShader.ID, "albedo"), albedo.x, albedo.y, albedo.z);
+        glUniform1f(glGetUniformLocation(pbrShader.ID, "metallic"), metallic);
+        glUniform1f(glGetUniformLocation(pbrShader.ID, "roughness"), roughness);
+        glUniform1f(glGetUniformLocation(pbrShader.ID, "ao"), ao);
+
         for (Model *model : Model::models)
         {
-            model->Draw(shaderProgram, camera);
+            model->Draw(pbrShader, camera);
         }
 
         // ImGui
@@ -171,6 +182,17 @@ int main()
         ImGui::TextColored(ImVec4(128.0f, 0.0f, 128.0f, 255.0f), "Stats");
         ImGui::Text("FPS: %.1f", io.Framerate);
         ImGui::Text("Frame time: %.3f ms", 1000.0f / io.Framerate);
+        ImGui::Text("Material Properties");
+        ImGui::ColorEdit3("Albedo", &albedo[0]); // Control for Albedo color
+
+        // Metallic
+        ImGui::SliderFloat("Metallic", &metallic, 0.0f, 1.0f); // Control for Metallic
+
+        // Roughness
+        ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.0f); // Control for Roughness
+
+        // Ambient Occlusion (AO)
+        ImGui::SliderFloat("AO", &ao, 0.0f, 1.0f);
         ImGui::End();
 
         ImGui::Begin("Lights", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
@@ -195,15 +217,15 @@ int main()
         glfwPollEvents();
     }
 
-    dlight.SaveImGuiData("saveData/transforms.json");
-    // pLight.SaveImGuiData("saveData/transforms.json");
-    // sLight.SaveImGuiData("saveData/transforms.json");
+    for (Light *light : Light::lights)
+    {
+        light->SaveImGuiData("saveData/transforms.json");
+    }
 
-    sphere.SaveImGuiData("saveData/transforms.json");
-    icoSphere.SaveImGuiData("saveData/transforms.json");
-    abstract.SaveImGuiData("saveData/transforms.json");
-    cube.SaveImGuiData("saveData/transforms.json");
-    bg.SaveImGuiData("saveData/transforms.json");
+    for (Model *model : Model::models)
+    {
+        model->SaveImGuiData("saveData/transforms.json");
+    }
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
