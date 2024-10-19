@@ -57,15 +57,15 @@ void Light::UI()
         {
             ImGui::Text("Attenuation");
             ImGui::SliderFloat("Constant", &constant, 0.0f, 1.0f);
-            ImGui::SliderFloat("Linear", &linear, 0.0f, 1.0f);
-            ImGui::SliderFloat("Quadratic", &quadratic, 0.0f, 1.0f);
+            ImGui::SliderFloat("Linear", &linear, 0.0f, 2.0f);
+            ImGui::SliderFloat("Quadratic", &quadratic, 0.0f, 2.0f);
         }
         else
         {
             ImGui::Text("Attenuation");
             ImGui::SliderFloat("Constant", &constant, 0.0f, 1.0f);
-            ImGui::SliderFloat("Linear", &linear, 0.0f, 1.0f);
-            ImGui::SliderFloat("Quadratic", &quadratic, 0.0f, 1.0f);
+            ImGui::SliderFloat("Linear", &linear, 0.0f, 2.0f);
+            ImGui::SliderFloat("Quadratic", &quadratic, 0.0f, 2.0f);
             ImGui::Text("Cutoff Angles");
             ImGui::SliderFloat("Cutoff", &cutoff, 0.0f, 90.0f);
             ImGui::SliderFloat("Outer Cutoff", &outerCutoff, cutoff, 90.0f);

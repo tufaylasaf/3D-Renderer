@@ -145,7 +145,7 @@ int main()
 
         for (Light *light : Light::lights)
         {
-            light->Draw(lightShader, shaderProgram, camera, true);
+            light->Draw(lightShader, shaderProgram, camera, false);
         }
 
         shaderProgram.Activate();
