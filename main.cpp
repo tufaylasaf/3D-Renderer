@@ -1,9 +1,14 @@
+#include <filesystem>
+namespace fs = std::filesystem;
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
 #include "Model.h"
 #include "light.h"
+
+unsigned int loadTexture(const char *path, GLenum format);
 
 const unsigned int width = 1600;
 const unsigned int height = 900;
@@ -65,7 +70,7 @@ int main()
     Shader lightShader("res/shaders/light.vert", "res/shaders/light.frag");
     Shader depthShader("res/shaders/depth.vert", "res/shaders/depth.frag");
 
-    Shader pbrShader("res/shaders/default.vert", "res/shaders/pbr.frag");
+    Shader pbrShader("res/shaders/default.vert", "res/shaders/pbr_textured.frag");
 
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
@@ -75,10 +80,23 @@ int main()
     Light pLight3("res/models/Shapes/sphere.gltf", "PLight3", "Point");
     Light pLight4("res/models/Shapes/sphere.gltf", "PLight4", "Point");
 
-    Model sphere("res/models/Shapes/sphere.gltf", "Sphere", false);
-    Model sphere2("res/models/Shapes/sphere.gltf", "Sphere2", false);
-    Model sphere3("res/models/Shapes/sphere.gltf", "Sphere3", false);
-    Model sphere4("res/models/Shapes/sphere.gltf", "Sphere4", false);
+    Model sphere("res/models/Shapes/cube.gltf", "Sphere", true);
+    Model sphere2("res/models/Shapes/cube.gltf", "Sphere2", true);
+    Model sphere3("res/models/Shapes/cube.gltf", "Sphere3", true);
+    Model sphere4("res/models/Shapes/cube.gltf", "Sphere4", true);
+
+    pbrShader.Activate();
+    glUniform1i(glGetUniformLocation(pbrShader.ID, "albedoMap"), 0);
+    glUniform1i(glGetUniformLocation(pbrShader.ID, "normalMap"), 1);
+    glUniform1i(glGetUniformLocation(pbrShader.ID, "metallicMap"), 2);
+    glUniform1i(glGetUniformLocation(pbrShader.ID, "roughnessMap"), 3);
+    glUniform1i(glGetUniformLocation(pbrShader.ID, "aoMap"), 4);
+
+    unsigned int albedo = loadTexture("res/textures/planks.png", GL_RGB);
+    unsigned int normal = loadTexture("res/textures/brick/wood_floor_worn_nor_gl_2k.jpg", GL_RGB);
+    unsigned int metallic = loadTexture("res/textures/brick/wood_floor_worn_arm_2k.jpg", GL_RGB);
+    unsigned int roughness = loadTexture("res/textures/brick/wood_floor_worn_arm_2k.jpg", GL_RGB);
+    unsigned int ao = loadTexture("res/textures/brick/wood_floor_worn_arm_2k.jpg", GL_RGB);
 
     // ImGui Init
     IMGUI_CHECKVERSION();
@@ -152,13 +170,23 @@ int main()
             light->Draw(lightShader, pbrShader, camera, false);
         }
 
-        // shaderProgram.Activate();
+        pbrShader.Activate();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, albedo);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, normal);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, metallic);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, roughness);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, ao);
         // glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "lightProjection"), 1, GL_FALSE, glm::value_ptr(lightProjection));
 
         // Bind the Shadow Map
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, shadowMap);
-        glUniform1i(glGetUniformLocation(shaderProgram.ID, "shadowMap"), 0);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, shadowMap);
+        // glUniform1i(glGetUniformLocation(shaderProgram.ID, "shadowMap"), 0);
 
         for (Model *model : Model::models)
         {
@@ -219,4 +247,33 @@ int main()
 
     glfwTerminate();
     return 0;
+}
+
+unsigned int loadTexture(char const *path, GLenum format)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
 }

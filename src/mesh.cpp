@@ -33,21 +33,21 @@ void Mesh::Draw(
     unsigned int numSpecular = 0;
 
     // Bind textures
-    for (unsigned int i = 0; i < textures.size(); i++)
-    {
-        std::string num;
-        std::string type = textures[i].type;
-        if (type == "diffuse")
-        {
-            num = std::to_string(numDiffuse++);
-        }
-        else if (type == "specular")
-        {
-            num = std::to_string(numSpecular++);
-        }
-        textures[i].texUnit(shader, (type + num).c_str(), i);
-        textures[i].Bind();
-    }
+    // for (unsigned int i = 0; i < textures.size(); i++)
+    // {
+    //     std::string num;
+    //     std::string type = textures[i].type;
+    //     if (type == "diffuse")
+    //     {
+    //         num = std::to_string(numDiffuse++);
+    //     }
+    //     else if (type == "specular")
+    //     {
+    //         num = std::to_string(numSpecular++);
+    //     }
+    //     textures[i].texUnit(shader, (type + num).c_str(), i);
+    //     textures[i].Bind();
+    // }
 
     // Set camera position and view matrix
     glUniform3f(glGetUniformLocation(shader.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);

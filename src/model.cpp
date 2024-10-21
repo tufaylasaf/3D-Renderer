@@ -1,6 +1,6 @@
 #include "Model.h"
 
-Model::Model(const char *file, std::string n, bool isLight)
+Model::Model(const char *file, std::string n, bool addToList)
 {
     name = n;
     std::string text = get_file_contents(file);
@@ -13,7 +13,7 @@ Model::Model(const char *file, std::string n, bool isLight)
 
     LoadImGuiData("saveData/transforms.json");
 
-    if (!isLight)
+    if (addToList)
         models.push_back(this);
 }
 
@@ -357,42 +357,42 @@ std::vector<Texture> Model::getTextures()
     std::string fileStr = std::string(file);
     std::string fileDirectory = fileStr.substr(0, fileStr.find_last_of('/') + 1);
 
-    for (unsigned int i = 0; i < JSON["images"].size(); i++)
-    {
+    // for (unsigned int i = 0; i < JSON["images"].size(); i++)
+    // {
 
-        std::string texPath = JSON["images"][i]["uri"];
+    //     std::string texPath = JSON["images"][i]["uri"];
 
-        bool skip = false;
-        for (unsigned int j = 0; j < loadedTexName.size(); j++)
-        {
-            if (loadedTexName[j] == texPath)
-            {
-                textures.push_back(loadedTex[j]);
-                skip = true;
-                break;
-            }
-        }
+    //     bool skip = false;
+    //     for (unsigned int j = 0; j < loadedTexName.size(); j++)
+    //     {
+    //         if (loadedTexName[j] == texPath)
+    //         {
+    //             textures.push_back(loadedTex[j]);
+    //             skip = true;
+    //             break;
+    //         }
+    //     }
 
-        if (!skip)
-        {
+    //     if (!skip)
+    //     {
 
-            if (texPath.find("baseColor") != std::string::npos)
-            {
-                Texture diffuse = Texture((fileDirectory + texPath).c_str(), "diffuse", loadedTex.size());
-                textures.push_back(diffuse);
-                loadedTex.push_back(diffuse);
-                loadedTexName.push_back(texPath);
-            }
+    //         if (texPath.find("baseColor") != std::string::npos)
+    //         {
+    //             Texture diffuse = Texture((fileDirectory + texPath).c_str(), "diffuse", loadedTex.size());
+    //             textures.push_back(diffuse);
+    //             loadedTex.push_back(diffuse);
+    //             loadedTexName.push_back(texPath);
+    //         }
 
-            else if (texPath.find("metallicRoughness") != std::string::npos)
-            {
-                Texture specular = Texture((fileDirectory + texPath).c_str(), "specular", loadedTex.size());
-                textures.push_back(specular);
-                loadedTex.push_back(specular);
-                loadedTexName.push_back(texPath);
-            }
-        }
-    }
+    //         else if (texPath.find("metallicRoughness") != std::string::npos)
+    //         {
+    //             Texture specular = Texture((fileDirectory + texPath).c_str(), "specular", loadedTex.size());
+    //             textures.push_back(specular);
+    //             loadedTex.push_back(specular);
+    //             loadedTexName.push_back(texPath);
+    //         }
+    //     }
+    // }
 
     return textures;
 }

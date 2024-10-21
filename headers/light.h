@@ -18,7 +18,7 @@ public:
 
     static std::vector<Light *> lights;
 
-    Light(const char *file, std::string n, std::string t) : type(t), Model(file, n, true)
+    Light(const char *file, std::string n, std::string t) : type(t), Model(file, n, false)
     {
         lights.push_back(this);
         if (t == "Point")

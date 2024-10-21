@@ -89,7 +89,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }  
 
-vec3 CalcPointLight(int i,vec3 N, vec3 V, vec3 F0){
+vec3 CalcPointLight(int i,vec3 N, vec3 V, vec3 F0,vec3 albedo, float roughness, float metallic){
     vec3 L = normalize(pLight[i].position - FragPos);
     vec3 H = normalize(V + L);
 
@@ -98,13 +98,13 @@ vec3 CalcPointLight(int i,vec3 N, vec3 V, vec3 F0){
 
     vec3 radiance = pLight[i].color * attenuation;        
 
-    float NDF = DistributionGGX(N, H, material.roughness);        
-    float G = GeometrySmith(N, V, L, material.roughness);      
+    float NDF = DistributionGGX(N, H, roughness);        
+    float G = GeometrySmith(N, V, L, roughness);      
     vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);       
     
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - material.metallic;	  
+    kD *= 1.0 - metallic;	  
     
     vec3 numerator    = NDF * G * F;
     float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
@@ -112,10 +112,10 @@ vec3 CalcPointLight(int i,vec3 N, vec3 V, vec3 F0){
         
     // add to outgoing radiance Lo
     float NdotL = max(dot(N, L), 0.0);                
-    return (kD * material.albedo / PI + specular) * radiance * NdotL; 
+    return (kD * albedo / PI + specular) * radiance * NdotL; 
 }
 
-vec3 CalcDirLight(vec3 N, vec3 V,vec3 F0)
+vec3 CalcDirLight(vec3 N, vec3 V,vec3 F0,vec3 albedo, float roughness, float metallic)
 {
     vec3 L = normalize(-dLight.direction);
     vec3 H = normalize(V + L);
@@ -124,13 +124,13 @@ vec3 CalcDirLight(vec3 N, vec3 V,vec3 F0)
 
     // float shadow = ShadowCalculation(FragPosLightSpace, N, L);
 
-    float NDF = DistributionGGX(N, H, material.roughness);        
-    float G = GeometrySmith(N, V, L, material.roughness);      
+    float NDF = DistributionGGX(N, H, roughness);        
+    float G = GeometrySmith(N, V, L, roughness);      
     vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);       
     
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - material.metallic;	  
+    kD *= 1.0 - metallic;	  
     
     vec3 numerator    = NDF * G * F;
     float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
@@ -138,8 +138,9 @@ vec3 CalcDirLight(vec3 N, vec3 V,vec3 F0)
         
     // add to outgoing radiance Lo
     float NdotL = max(dot(N, L), 0.0);                
-    return (kD * material.albedo / PI + specular) * radiance * NdotL; 
+    return (kD * albedo / PI + specular) * radiance * NdotL; 
 }
+
 
 // vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 // {
@@ -171,18 +172,28 @@ vec3 CalcDirLight(vec3 N, vec3 V,vec3 F0)
 
 
 void main(){
+    vec3 albedo = material.albedo;
+    float metallic  = material.metallic;
+    float roughness = material.roughness;
+    float ao        = material.ao;
+
+    // vec3 albedo = vec3(1.0,0.0,0.0);
+    // float metallic  = 0.25;
+    // float roughness = 0.25;
+    // float ao        = 0.1;
+
     vec3 N = normalize(Normal); 
     vec3 V = normalize(viewPos - FragPos);
 
     vec3 F0 = vec3(0.04); 
-    F0 = mix(F0, material.albedo, material.metallic);
+    F0 = mix(F0, albedo, metallic);
 
-    vec3 Lo = CalcDirLight(N,V,F0);
+    vec3 Lo = CalcDirLight(N,V,F0,albedo,roughness,metallic);
     for(int i = 0; i < pointLightCount; i++){
-        Lo += CalcPointLight(i,N,V, F0);
+        Lo += CalcPointLight(i,N,V, F0,albedo,roughness,metallic);
     }
 
-    vec3 ambient = vec3(0.03) * material.albedo * material.ao;
+    vec3 ambient = vec3(0.03) * albedo * ao;
     vec3 color = ambient + Lo;
 	
     color = color / (color + vec3(1.0));
