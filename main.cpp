@@ -56,9 +56,9 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-    glFrontFace(GL_CCW);
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_FRONT);
+    // glFrontFace(GL_CCW);
 
     glEnable(GL_MULTISAMPLE);
 
@@ -71,6 +71,10 @@ int main()
     Shader pbrShader("res/shaders/default.vert", "res/shaders/pbr_textured.frag");
 
     Shader equirectangularToCubemapShader("res/shaders/cubemap.vs", "res/shaders/equirectangular_to_cubemap.frag");
+    Shader backgroundShader("res/shaders/skybox.vs", "res/shaders/skybox.frag");
+
+    backgroundShader.Activate();
+    glUniform1i(glGetUniformLocation(backgroundShader.ID, "environmentMap"), 0);
 
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
@@ -95,7 +99,7 @@ int main()
 
     glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
     glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 2048, 2048);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
 
     stbi_set_flip_vertically_on_load(true);
@@ -129,7 +133,7 @@ int main()
     glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
     for (unsigned int i = 0; i < 6; ++i)
     {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 2048, 2048, 0, GL_RGB, GL_FLOAT, nullptr);
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -139,7 +143,7 @@ int main()
 
     // pbr: set up projection and view matrices for capturing data onto the 6 cubemap face directions
     // ----------------------------------------------------------------------------------------------
-    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f);
     glm::mat4 captureViews[] =
         {
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
@@ -157,7 +161,7 @@ int main()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, hdrTexture);
 
-    glViewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
+    glViewport(0, 0, 2048, 2048); // don't forget to configure the viewport to the capture dimensions.
     glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
     for (unsigned int i = 0; i < 6; ++i)
     {
@@ -169,6 +173,14 @@ int main()
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    camera.updateMatrix(45.0f, 0.1f, 100.0f);
+    backgroundShader.Activate();
+    glUniformMatrix4fv(glGetUniformLocation(backgroundShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(camera.projection));
+
+    int scrWidth, scrHeight;
+    glfwGetFramebufferSize(window, &scrWidth, &scrHeight);
+    glViewport(0, 0, scrWidth, scrHeight);
+
     // ImGui Init
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -178,55 +190,10 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    glfwSwapInterval(1);
-
-    // Framebuffer for Shadow Map
-    unsigned int shadowMapFBO;
-    glGenFramebuffers(1, &shadowMapFBO);
-
-    // Texture for Shadow Map FBO
-    unsigned int shadowMapWidth = 2048, shadowMapHeight = 2048;
-    unsigned int shadowMap;
-    glGenTextures(1, &shadowMap);
-    glBindTexture(GL_TEXTURE_2D, shadowMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapWidth, shadowMapHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    // Prevents darkness outside the frustrum
-    float clampColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, clampColor);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
-    // Needed since we don't touch the color buffer
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // glfwSwapInterval(1);
 
     while (!glfwWindowShouldClose(window))
     {
-        // glEnable(GL_DEPTH_TEST);
-        // // Matrices needed for the light's perspective
-        // glm::mat4 orthgonalProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 75.0f);
-        // glm::mat4 lightView = glm::lookAt(dlight.translation, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        // glm::mat4 lightProjection = orthgonalProjection * lightView;
-
-        // depthShader.Activate();
-        // glUniformMatrix4fv(glGetUniformLocation(depthShader.ID, "lightProjection"), 1, GL_FALSE, glm::value_ptr(lightProjection));
-        // // Preparations for the Shadow Map
-        // glViewport(0, 0, shadowMapWidth, shadowMapHeight);
-        // glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
-        // glClear(GL_DEPTH_BUFFER_BIT);
-
-        // for (Model *model : Model::models)
-        // {
-        //     model->Draw(depthShader, camera);
-        // }
-
-        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
         glViewport(0, 0, width, height);
 
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
@@ -241,24 +208,26 @@ int main()
             light->Draw(lightShader, pbrShader, camera, false);
         }
 
-        // pbrShader.Activate();
-        // glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "lightProjection"), 1, GL_FALSE, glm::value_ptr(lightProjection));
-
-        // Bind the Shadow Map
-        // glActiveTexture(GL_TEXTURE0);
-        // glBindTexture(GL_TEXTURE_2D, shadowMap);
-        // glUniform1i(glGetUniformLocation(shaderProgram.ID, "shadowMap"), 0);
-
         for (Model *model : Model::models)
         {
             model->Draw(pbrShader, camera);
         }
 
-        equirectangularToCubemapShader.Activate();
-        glUniformMatrix4fv(glGetUniformLocation(equirectangularToCubemapShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(camera.view));
+        glDepthFunc(GL_LEQUAL);
+
+        // equirectangularToCubemapShader.Activate();
+        // glUniformMatrix4fv(glGetUniformLocation(equirectangularToCubemapShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(camera.view));
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, hdrTexture);
+        // cubeMap.Draw(equirectangularToCubemapShader, camera);
+
+        backgroundShader.Activate();
+        glUniformMatrix4fv(glGetUniformLocation(backgroundShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(camera.view));
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, hdrTexture);
-        cubeMap.Draw(equirectangularToCubemapShader, camera);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+        cubeMap.Draw(backgroundShader, camera);
+
+        glDepthFunc(GL_LESS);
 
         // ImGui
         ImGui_ImplOpenGL3_NewFrame();
