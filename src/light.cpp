@@ -36,7 +36,7 @@ void Light::UI()
 
         if (type == "Directional")
         {
-            ImGui::DragFloat3("Direction", &direction[0], 0.1f, -1.0f, 1.0f);
+            ImGui::DragFloat3("Direction", &direction[0], 0.05f, -1.0f, 1.0f);
         }
         else if (type == "Point")
         {

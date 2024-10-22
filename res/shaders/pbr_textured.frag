@@ -51,9 +51,9 @@ uniform Material material;
 
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
-uniform sampler2D metallicMap;
-uniform sampler2D roughnessMap;
-uniform sampler2D aoMap;
+uniform sampler2D armMap;
+
+uniform bool textured;
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
@@ -147,6 +147,22 @@ vec3 CalcDirLight(vec3 N, vec3 V,vec3 F0,vec3 albedo, float roughness, float met
     return (kD * albedo / PI + specular) * radiance * NdotL; 
 }
 
+vec3 getNormalFromMap()
+{
+    vec3 tangentNormal = texture(normalMap, TexCoords).xyz * 2.0 - 1.0;
+
+    vec3 Q1  = dFdx(FragPos);
+    vec3 Q2  = dFdy(FragPos);
+    vec2 st1 = dFdx(TexCoords);
+    vec2 st2 = dFdy(TexCoords);
+
+    vec3 N   = normalize(Normal);
+    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
+    vec3 B  = -normalize(cross(N, T));
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
+}
 
 // vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 // {
@@ -178,18 +194,24 @@ vec3 CalcDirLight(vec3 N, vec3 V,vec3 F0,vec3 albedo, float roughness, float met
 
 
 void main(){
-    // vec3 albedo = vec3(1.0,0.0,0.0);
-    float metallic  = 0.25;
-    float roughness = 0.25;
-    float ao        = 1.0;
+    vec3 albedo     = material.albedo;
+    float ao = material.ao;        
+    float roughness = material.roughness;  
+    float metallic = material.metallic;   
+    vec3 N;
 
-    vec3 albedo     = texture(albedoMap, TexCoords).rgb;
-    // vec3 normal     = getNormalFromNormalMap();
-    // float metallic  = texture(metallicMap, TexCoords).b;
-    // float roughness = texture(roughnessMap, TexCoords).g;
-    // float ao        = texture(aoMap, TexCoords).r;
+    if(textured){
+        albedo     *= pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
+        vec3 arm = texture(armMap, TexCoords).rgb;
+        ao *= arm.r;        
+        roughness *= arm.g;  
+        metallic *= arm.b;   
+        N = getNormalFromMap();
+    }
+    else{
+        N = normalize(Normal);
+    }
 
-    vec3 N = normalize(Normal); 
     vec3 V = normalize(viewPos - FragPos);
 
     vec3 F0 = vec3(0.04); 

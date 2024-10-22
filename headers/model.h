@@ -21,6 +21,7 @@ public:
 
     // Loads in a model from a file and stores tha information in 'data', 'JSON', and 'file'
     Model(const char *file, std::string n, bool addToList);
+    Model(const char *file, std::string tex, std::string n, bool addToList);
 
     void Draw(Shader &shader, Camera &camera);
 
@@ -33,6 +34,7 @@ public:
 private:
     // Variables for easy access
     const char *file;
+    std::string texFolder = "";
     std::vector<unsigned char> data;
     json JSON;
 

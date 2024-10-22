@@ -5,7 +5,9 @@
 /cmake_install.cmake
 /Makefile
 /compile_commands.json
-
+/res/models/
+/res/textures/
+/res/skybox/
 # Ignore VSCode specific settings
 /.vscode/
 /.vscode/*

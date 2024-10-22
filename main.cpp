@@ -8,8 +8,6 @@ namespace fs = std::filesystem;
 #include "Model.h"
 #include "light.h"
 
-unsigned int loadTexture(const char *path, GLenum format);
-
 const unsigned int width = 1600;
 const unsigned int height = 900;
 
@@ -80,23 +78,12 @@ int main()
     Light pLight3("res/models/Shapes/sphere.gltf", "PLight3", "Point");
     Light pLight4("res/models/Shapes/sphere.gltf", "PLight4", "Point");
 
-    Model sphere("res/models/Shapes/cube.gltf", "Sphere", true);
-    Model sphere2("res/models/Shapes/cube.gltf", "Sphere2", true);
-    Model sphere3("res/models/Shapes/cube.gltf", "Sphere3", true);
-    Model sphere4("res/models/Shapes/cube.gltf", "Sphere4", true);
+    // Model sphere("res/models/Shapes/sphere.gltf", "res/textures/rocky_terrain_2k/textures", "Sphere", true);
+    // Model sphere2("res/models/Shapes/sphere.gltf", "Sphere2", true);
+    // Model sphere3("res/models/Shapes/sphere.gltf", "Sphere3", true);
+    // Model sphere4("res/models/Shapes/sphere.gltf", "res/textures/blue_metal_plate_2k/textures", "Sphere4", true);
 
-    pbrShader.Activate();
-    glUniform1i(glGetUniformLocation(pbrShader.ID, "albedoMap"), 0);
-    glUniform1i(glGetUniformLocation(pbrShader.ID, "normalMap"), 1);
-    glUniform1i(glGetUniformLocation(pbrShader.ID, "metallicMap"), 2);
-    glUniform1i(glGetUniformLocation(pbrShader.ID, "roughnessMap"), 3);
-    glUniform1i(glGetUniformLocation(pbrShader.ID, "aoMap"), 4);
-
-    unsigned int albedo = loadTexture("res/textures/planks.png", GL_RGB);
-    unsigned int normal = loadTexture("res/textures/brick/wood_floor_worn_nor_gl_2k.jpg", GL_RGB);
-    unsigned int metallic = loadTexture("res/textures/brick/wood_floor_worn_arm_2k.jpg", GL_RGB);
-    unsigned int roughness = loadTexture("res/textures/brick/wood_floor_worn_arm_2k.jpg", GL_RGB);
-    unsigned int ao = loadTexture("res/textures/brick/wood_floor_worn_arm_2k.jpg", GL_RGB);
+    Model sprayPaint("res/models/wooden_bucket_02_2k/wooden_bucket_02_2k.gltf", "res/models/wooden_bucket_02_2k/textures", "Spray Paint", true);
 
     // ImGui Init
     IMGUI_CHECKVERSION();
@@ -171,16 +158,6 @@ int main()
         }
 
         pbrShader.Activate();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, albedo);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, normal);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, metallic);
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, roughness);
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, ao);
         // glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "lightProjection"), 1, GL_FALSE, glm::value_ptr(lightProjection));
 
         // Bind the Shadow Map
