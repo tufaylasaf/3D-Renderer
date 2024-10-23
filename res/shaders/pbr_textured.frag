@@ -49,9 +49,11 @@ uniform float pointLightCount;
   
 uniform Material material;
 
+uniform samplerCube irradianceMap;
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
 uniform sampler2D armMap;
+
 
 uniform bool textured;
 
@@ -222,7 +224,13 @@ void main(){
         Lo += CalcPointLight(i,N,V, F0,albedo,roughness,metallic);
     }
 
-    vec3 ambient = vec3(0.03) * albedo * ao;
+    vec3 kS = fresnelSchlick(max(dot(N, V), 0.0), F0); 
+    vec3 kD = 1.0 - kS;
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+    vec3 diffuse    = irradiance * albedo;
+    vec3 ambient    = (kD * diffuse) * ao; 
+
+    // vec3 ambient = vec3(0.03) * albedo * ao;
     vec3 color = ambient + Lo;
 	
     color = color / (color + vec3(1.0));

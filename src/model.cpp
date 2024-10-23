@@ -372,61 +372,18 @@ std::vector<GLuint> Model::getIndices(json accessor)
 std::vector<Texture> Model::getTextures()
 {
     std::vector<Texture> textures;
-    if (texFolder == "")
+    if (texFolder != "")
     {
-        std::string fileStr = std::string(file);
-        std::string fileDirectory = fileStr.substr(0, fileStr.find_last_of('/') + 1);
 
-        for (unsigned int i = 0; i < JSON["images"].size(); i++)
-        {
+        std::string albedoPath = texFolder + "/albedo.png";
+        std::string normalPath = texFolder + "/normal.png";
+        std::string armPath = texFolder + "/arm.png";
 
-            std::string texPath = JSON["images"][i]["uri"];
-
-            bool skip = false;
-            for (unsigned int j = 0; j < loadedTexName.size(); j++)
-            {
-                if (loadedTexName[j] == texPath)
-                {
-                    textures.push_back(loadedTex[j]);
-                    skip = true;
-                    break;
-                }
-            }
-
-            if (!skip)
-            {
-
-                if (texPath.find("baseColor") != std::string::npos)
-                {
-                    Texture diffuse = Texture((fileDirectory + texPath).c_str(), "diffuse", loadedTex.size());
-                    textures.push_back(diffuse);
-                    loadedTex.push_back(diffuse);
-                    loadedTexName.push_back(texPath);
-                }
-
-                else if (texPath.find("metallicRoughness") != std::string::npos)
-                {
-                    Texture specular = Texture((fileDirectory + texPath).c_str(), "specular", loadedTex.size());
-                    textures.push_back(specular);
-                    loadedTex.push_back(specular);
-                    loadedTexName.push_back(texPath);
-                }
-            }
-        }
-    }
-    else
-    {
-        // File paths for the different texture maps (in the folder)
-        std::string albedoPath = texFolder + "/albedo.png"; // Albedo map
-        std::string normalPath = texFolder + "/normal.png"; // Normal map
-        std::string armPath = texFolder + "/arm.png";       // ARM map (AO, Roughness, Metallic)
-
-        // Try loading each texture and add it to the textures vector
         try
         {
-            textures.push_back(Texture(albedoPath.c_str(), "albedo", 0));
-            textures.push_back(Texture(normalPath.c_str(), "normal", 1));
-            textures.push_back(Texture(armPath.c_str(), "arm", 2)); // ARM texture
+            textures.push_back(Texture(albedoPath.c_str(), "albedo", 1));
+            textures.push_back(Texture(normalPath.c_str(), "normal", 2));
+            textures.push_back(Texture(armPath.c_str(), "arm", 3));
         }
         catch (const std::exception &e)
         {

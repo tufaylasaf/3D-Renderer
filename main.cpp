@@ -72,6 +72,10 @@ int main()
 
     Shader equirectangularToCubemapShader("res/shaders/cubemap.vs", "res/shaders/equirectangular_to_cubemap.frag");
     Shader backgroundShader("res/shaders/skybox.vs", "res/shaders/skybox.frag");
+    Shader irradianceShader("res/shaders/cubemap.vs", "res/shaders/irradiance.frag");
+
+    pbrShader.Activate();
+    glUniform1i(glGetUniformLocation(pbrShader.ID, "irradianceMap"), 0);
 
     backgroundShader.Activate();
     glUniform1i(glGetUniformLocation(backgroundShader.ID, "environmentMap"), 0);
@@ -86,10 +90,10 @@ int main()
 
     // Model sphere("res/models/Shapes/sphere.gltf", "res/textures/rocky_terrain_2k/textures", "Sphere", true);
     Model sphere2("res/models/Shapes/sphere.gltf", "Sphere2", true);
-    Model sphere3("res/models/Shapes/sphere.gltf", "Sphere3", true);
+    // Model sphere3("res/models/Shapes/sphere.gltf", "Sphere3", true);
     // Model sphere4("res/models/Shapes/sphere.gltf", "res/textures/blue_metal_plate_2k/textures", "Sphere4", true);
 
-    // Model sprayPaint("res/models/wooden_bucket_02_2k/wooden_bucket_02_2k.gltf", "res/models/wooden_bucket_02_2k/textures", "Spray Paint", true);
+    Model sprayPaint("res/models/wooden_bucket_02_2k/wooden_bucket_02_2k.gltf", "res/models/wooden_bucket_02_2k/textures", "Spray Paint", true);
     Model cubeMap("res/models/Shapes/cube.gltf", "cubemap", false);
 
     unsigned int captureFBO;
@@ -103,14 +107,14 @@ int main()
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
 
     stbi_set_flip_vertically_on_load(true);
-    int width, height, nrComponents;
-    float *data = stbi_loadf("res/skybox/neon_photostudio_4k.hdr", &width, &height, &nrComponents, 0);
+    int w, h, nrComponents;
+    float *data = stbi_loadf("res/skybox/neon_photostudio_4k.hdr", &w, &h, &nrComponents, 0);
     unsigned int hdrTexture;
     if (data)
     {
         glGenTextures(1, &hdrTexture);
         glBindTexture(GL_TEXTURE_2D, hdrTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, w, h, 0, GL_RGB, GL_FLOAT, data);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -173,6 +177,45 @@ int main()
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    // pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
+    // --------------------------------------------------------------------------------
+    unsigned int irradianceMap;
+    glGenTextures(1, &irradianceMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
+
+    // pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
+    // -----------------------------------------------------------------------------
+    irradianceShader.Activate();
+    glUniform1i(glGetUniformLocation(irradianceShader.ID, "environmentMap"), 0);
+    glUniformMatrix4fv(glGetUniformLocation(irradianceShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(captureProjection));
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+
+    glViewport(0, 0, 32, 32); // don't forget to configure the viewport to the capture dimensions.
+    glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        glUniformMatrix4fv(glGetUniformLocation(irradianceShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        cubeMap.Draw(irradianceShader, camera);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     camera.updateMatrix(45.0f, 0.1f, 100.0f);
     backgroundShader.Activate();
     glUniformMatrix4fv(glGetUniformLocation(backgroundShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(camera.projection));
@@ -224,7 +267,8 @@ int main()
         backgroundShader.Activate();
         glUniformMatrix4fv(glGetUniformLocation(backgroundShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(camera.view));
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+        // glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
         cubeMap.Draw(backgroundShader, camera);
 
         glDepthFunc(GL_LESS);
