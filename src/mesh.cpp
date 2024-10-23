@@ -51,7 +51,7 @@ void Mesh::Draw(
         {
             num = "Map";
         }
-        textures[i].texUnit(shader, (type + num).c_str(), i + 1);
+        textures[i].texUnit(shader, (type + num).c_str(), i + 3);
         textures[i].Bind();
     }
 

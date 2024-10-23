@@ -381,9 +381,9 @@ std::vector<Texture> Model::getTextures()
 
         try
         {
-            textures.push_back(Texture(albedoPath.c_str(), "albedo", 1));
-            textures.push_back(Texture(normalPath.c_str(), "normal", 2));
-            textures.push_back(Texture(armPath.c_str(), "arm", 3));
+            textures.push_back(Texture(albedoPath.c_str(), "albedo", 3));
+            textures.push_back(Texture(normalPath.c_str(), "normal", 4));
+            textures.push_back(Texture(armPath.c_str(), "arm", 5));
         }
         catch (const std::exception &e)
         {
