@@ -7,7 +7,7 @@ uniform samplerCube environmentMap;
   
 void main()
 {
-    vec3 envColor = textureLod(environmentMap, localPos, 1.2).rgb; 
+    vec3 envColor = textureLod(environmentMap, localPos, 0.8).rgb; 
     
     envColor = envColor / (envColor + vec3(1.0));
     envColor = pow(envColor, vec3(1.0/2.2)); 
