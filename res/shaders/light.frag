@@ -3,15 +3,16 @@
 out vec4 FragColor;
 
 struct Material {
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    float shininess;
+    vec3 albedo;
+    float roughness;
+    float metallic;
+    float ao;
 }; 
+
 
 uniform Material material;
 
 void main()
 {
-	FragColor = vec4(material.diffuse,1.0f);
+	FragColor = vec4(material.albedo,1.0);
 }

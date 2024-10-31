@@ -27,6 +27,7 @@ public:
     glm::mat4 cameraMatrix = glm::mat4(1.0f);
 
     bool firstClick = true;
+    bool isAutoRotating = false;
 
     int width;
     int height;
@@ -40,5 +41,6 @@ public:
     void Matrix(Shader &shader, const char *uniform);
 
     void Inputs(GLFWwindow *window);
+    void autoRotate(GLFWwindow *window, float centerX, float centerY, float centerZ, float distance, float rotationSpeed);
 };
 #endif

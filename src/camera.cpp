@@ -28,6 +28,25 @@ void Camera::Inputs(GLFWwindow *window)
     // Get ImGui I/O structure
     ImGuiIO &io = ImGui::GetIO();
 
+    static bool rKeyPressedLastFrame = false;
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+    {
+        if (!rKeyPressedLastFrame)
+        {
+            isAutoRotating = !isAutoRotating;
+            rKeyPressedLastFrame = true;
+        }
+    }
+    else
+    {
+        rKeyPressedLastFrame = false;
+    }
+
+    if (isAutoRotating)
+    {
+        autoRotate(window, 0.0f, 0.0f, 0.0f, 3.0f, 0.6f); // Example center at (0,0,0), distance 5, rotation speed 0.5
+    }
+
     // If ImGui wants to capture the mouse, don't process camera inputs
     if (io.WantCaptureMouse)
     {
@@ -74,8 +93,8 @@ void Camera::Inputs(GLFWwindow *window)
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ||
         glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
     {
-        // Hide the cursor when any mouse button is pressed
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+        // // Hide the cursor when any mouse button is pressed
+        // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
         if (firstClick)
         {
@@ -137,4 +156,25 @@ void Camera::Inputs(GLFWwindow *window)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         firstClick = true;
     }
+}
+
+void Camera::autoRotate(GLFWwindow *window, float centerX, float centerY, float centerZ, float distance, float rotationSpeed)
+{
+    // Calculate the direction vector from the camera to the center
+    glm::vec3 center(centerX, centerY, centerZ);
+    glm::vec3 direction = glm::normalize(Position - center);
+
+    // Set the camera's position in a circular path around the center
+    float radius = distance;
+
+    // Calculate new position by rotating around the Y-axis
+    float angle = rotationSpeed * glfwGetTime(); // Time-based angle for smooth rotation
+    float x = center.x + radius * cos(angle);
+    float z = center.z + radius * sin(angle);
+    float y = centerY + 1.0f;
+
+    Position = glm::vec3(x, y, z);
+
+    // Ensure the camera looks at the center point
+    Orientation = glm::normalize(center - Position);
 }

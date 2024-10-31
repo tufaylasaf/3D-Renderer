@@ -37,6 +37,8 @@ Model::Model(const char *file, std::string tex, std::string n, bool addToList)
 
 void Model::Draw(Shader &shader, Camera &camera)
 {
+    if (!display)
+        return;
     bool textured = texFolder == "" ? false : true;
     for (unsigned int i = 0; i < meshes.size(); i++)
     {
@@ -48,6 +50,8 @@ void Model::UI()
 {
     if (ImGui::CollapsingHeader(name.c_str()))
     {
+        ImGui::Checkbox("Visible", &display);
+
         // Position controls
         ImGui::Text("Transform");
         ImGui::DragFloat3("Position", &translation[0], 0.1f);

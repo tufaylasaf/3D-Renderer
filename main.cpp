@@ -92,14 +92,21 @@ int main()
     Light pLight2("res/models/Shapes/sphere.gltf", "PLight2", "Point");
     Light pLight3("res/models/Shapes/sphere.gltf", "PLight3", "Point");
     Light pLight4("res/models/Shapes/sphere.gltf", "PLight4", "Point");
-
-    Model sphere("res/models/Shapes/sphere.gltf", "res/textures/rocky_terrain_2k/textures", "Sphere", true);
-    Model sphere2("res/models/Shapes/sphere.gltf", "Sphere2", true);
-    Model sphere3("res/models/Shapes/sphere.gltf", "Sphere3", true);
-    Model sphere4("res/models/Shapes/sphere.gltf", "res/textures/blue_metal_plate_2k/textures", "Sphere4", true);
-
-    Model sprayPaint("res/models/wooden_bucket_02_2k/wooden_bucket_02_2k.gltf", "res/models/wooden_bucket_02_2k/textures", "Spray Paint", true);
+    Light sLight("res/models/Shapes/sphere.gltf", "SLight", "Spot");
     Model cubeMap("res/models/Shapes/cube.gltf", "cubemap", false);
+
+    Model bg("res/models/Shapes/bg.gltf", "res/textures/red_plaster_weathered_2k/textures", "BG", true);
+    // Model model("res/models/Shapes/sphere.gltf", "res/textures/slate_floor_2k/textures", "Sphere", true);
+    Model model2("res/models/Shapes/sphere.gltf", "Sphere2", true);
+    // Model brass("res/models/brass_pot_02_2k/brass_pot_02_2k.gltf", "res/models/brass_pot_02_2k/textures", "Brass", true);
+    // Model apple("res/models/food_apple_01_2k/food_apple_01_2k.gltf", "res/models/food_apple_01_2k/textures", "Apple", true);
+    // Model lime("res/models/food_lime_01_2k/food_lime_01_2k.gltf", "res/models/food_lime_01_2k/textures", "Lime", true);
+    // Model pomegranate("res/models/food_pomegranate_01_2k/food_pomegranate_01_2k.gltf", "res/models/food_pomegranate_01_2k/textures", "Pomegranate", true);
+    Model statue("res/models/marble_bust_01_2k/marble_bust_01_2k.gltf", "res/models/marble_bust_01_2k/textures", "Statue", true);
+    // Model table("res/models/round_wooden_table_01_2k/round_wooden_table_01_2k.gltf", "res/models/round_wooden_table_01_2k/textures", "Table", true);
+    // Model bucket("res/models/wooden_bucket_02_2k/wooden_bucket_02_2k.gltf", "res/models/wooden_bucket_02_2k/textures", "Bucket", true);
+    // Model abstract("res/models/Shapes/abstract.gltf", "res/textures/fabric_pattern_07_2k/textures", "Abstract", true);
+    // Model paint("res/models/spray_paint_bottles_02_2k/spray_paint_bottles_02_2k.gltf", "res/models/spray_paint_bottles_02_2k/textures", "Spray Paint", true);
 
     unsigned int captureFBO;
     unsigned int captureRBO;
@@ -113,7 +120,8 @@ int main()
 
     stbi_set_flip_vertically_on_load(true);
     int w, h, nrComponents;
-    float *data = stbi_loadf("res/skybox/evening_field_4k.hdr", &w, &h, &nrComponents, 0);
+    // float *data = stbi_loadf("res/skybox/dikhololo_night_4k.hdr", &w, &h, &nrComponents, 0);
+    float *data = stbi_loadf("res/skybox/rogland_clear_night_4k.hdr", &w, &h, &nrComponents, 0);
     unsigned int hdrTexture;
     if (data)
     {
@@ -325,7 +333,7 @@ int main()
 
         for (Light *light : Light::lights)
         {
-            light->Draw(lightShader, pbrShader, camera, false);
+            light->Draw(lightShader, pbrShader, camera, true);
         }
 
         pbrShader.Activate();
@@ -355,8 +363,8 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(backgroundShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(camera.view));
         glActiveTexture(GL_TEXTURE0);
         // glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-        // glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
+        // glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
         cubeMap.Draw(backgroundShader, camera);
 
         glDepthFunc(GL_LESS);

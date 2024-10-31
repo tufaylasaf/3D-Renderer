@@ -11,9 +11,9 @@
 struct Material
 {
     glm::vec3 albedo = glm::vec3(1.0f, 1.0f, 1.0f);
-    float roughness = 0.5f;
-    float metallic = 0.5f;
-    float ao = 32;
+    float roughness = 1.0f;
+    float metallic = 1.0f;
+    float ao = 1.0f;
 };
 
 class Mesh

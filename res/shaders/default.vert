@@ -16,7 +16,7 @@ uniform mat4 lightProjection; // Light's view-projection matrix
 void main()
 {
     // Compute the fragment position in world space
-    FragPos = vec3(model * vec4(aPos, 1.0f));
+    FragPos = vec3(model * vec4(aPos, 1.0));
 
     // Compute normal with respect to model matrix transformations
     Normal = mat3(transpose(inverse(model))) * aNormal;
