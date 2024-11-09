@@ -241,22 +241,22 @@ void main(){
 
     Lo += CalcSpotLight(sLight, N,V, F0,albedo,roughness,metallic);
 
-    vec3 R = reflect(-V, N); 
+    // vec3 R = reflect(-V, N); 
 
-    vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-    vec3 kS = F;
-    vec3 kD = 1.0 - kS;
-    vec3 irradiance = texture(irradianceMap, N).rgb;
-    vec3 diffuse    = irradiance * albedo;
+    // vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+    // vec3 kS = F;
+    // vec3 kD = 1.0 - kS;
+    // vec3 irradiance = texture(irradianceMap, N).rgb;
+    // vec3 diffuse    = irradiance * albedo;
 
-    const float MAX_REFLECTION_LOD = 4.0;
-    vec3 prefilteredColor = textureLod(prefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;    
-    vec2 brdf  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
-    vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+    // const float MAX_REFLECTION_LOD = 4.0;
+    // vec3 prefilteredColor = textureLod(prefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;    
+    // vec2 brdf  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+    // vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
 
-    vec3 ambient = (kD * diffuse + specular) * ao;
+    // vec3 ambient = (kD * diffuse + specular) * ao;
 
-    // vec3 ambient = vec3(0.03) * albedo * ao;
+    vec3 ambient = vec3(0.03) * albedo * ao;
     vec3 color = ambient + Lo;
 	
     color = color / (color + vec3(1.0));
