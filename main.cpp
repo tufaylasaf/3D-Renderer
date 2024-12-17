@@ -70,6 +70,9 @@ int main()
     glCullFace(GL_FRONT);
     glFrontFace(GL_CCW);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glEnable(GL_MULTISAMPLE);
 
     glViewport(0, 0, width, height);
@@ -78,10 +81,11 @@ int main()
     Shader pbrShader("res/shaders/default.vert", "res/shaders/pbr_textured.frag");
     Shader frameBufferShader("res/shaders/framebuffer.vert", "res/shaders/framebuffer.frag");
 
-    frameBufferShader.Activate();
-    glUniform1i(glGetUniformLocation(frameBufferShader.ID, "screenTexture"), 0);
+    Shader raymarchShader("res/shaders/default.vert", "res/shaders/raymarch.frag");
 
-    Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
+    Model cube("res/models/Shapes/cube.gltf", "Cube", false);
+
+    // Model statue("res/models/marble_bust_01_2k/marble_bust_01_2k.gltf", "res/models/marble_bust_01_2k/textures", "Statue", true);
 
     Light dLight("res/models/Shapes/sphere.gltf", "DLight", "Directional");
     Light pLight("res/models/Shapes/sphere.gltf", "PLight", "Point");
@@ -90,11 +94,10 @@ int main()
     Light pLight4("res/models/Shapes/sphere.gltf", "PLight4", "Point");
     Light sLight("res/models/Shapes/sphere.gltf", "SLight", "Spot");
 
-    Model bg("res/models/Shapes/bg.gltf", "res/textures/red_plaster_weathered_2k/textures", "BG", true);
-    Model model2("res/models/Shapes/sphere.gltf", "Sphere", true);
-    Model statue("res/models/marble_bust_01_2k/marble_bust_01_2k.gltf", "res/models/marble_bust_01_2k/textures", "Statue", true);
-    Model abstract("res/models/Shapes/abstract.gltf", "Abstract", true);
-    Model cube("res/models/Shapes/cube.gltf", "Cube", true);
+    frameBufferShader.Activate();
+    glUniform1i(glGetUniformLocation(frameBufferShader.ID, "screenTexture"), 0);
+
+    Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
     // ImGui Init
     IMGUI_CHECKVERSION();
@@ -145,15 +148,45 @@ int main()
 
     // glfwSwapInterval(1);
 
+    float marchSize = 0.08f;
+    float lightMarchSize = 0.03f;
+    float absorptionCoEff = 0.9f;
+    int frameCount = 0;
+
+    Texture blueNoiseTexture("res/textures/blueNoise.png", "2D", 1);
+    blueNoiseTexture.texUnit(raymarchShader, "uBlueNoise", 1);
+
+    Texture noiseTexture("res/textures/noise2 (1).png", "2D", 2);
+    noiseTexture.texUnit(raymarchShader, "uNoise", 2);
+
     while (!glfwWindowShouldClose(window))
     {
         glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+        glClearColor(0.00f, 0.00f, 0.00f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
         camera.Inputs(window);
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
+
+        frameCount++;
+
+        raymarchShader.Activate();
+        blueNoiseTexture.Bind();
+        noiseTexture.Bind();
+        glUniform2f(glGetUniformLocation(raymarchShader.ID, "iResolution"), (float)width, (float)height);
+        // glUniform1i(glGetUniformLocation(raymarchShader.ID, "uFrame"), frameCount);
+
+        float timeValue = glfwGetTime();
+        glUniform1f(glGetUniformLocation(raymarchShader.ID, "iTime"), timeValue);
+        glUniform3f(glGetUniformLocation(raymarchShader.ID, "sunDirection"), dLight.direction.x, dLight.direction.y, dLight.direction.z);
+        glUniform3f(glGetUniformLocation(raymarchShader.ID, "sunColor"), dLight.material.albedo.x, dLight.material.albedo.y, dLight.material.albedo.z);
+        glUniform1f(glGetUniformLocation(raymarchShader.ID, "absorptionCoEff"), absorptionCoEff);
+        glUniform1f(glGetUniformLocation(raymarchShader.ID, "baseMarchSize"), marchSize);
+        glUniform1f(glGetUniformLocation(raymarchShader.ID, "lightMarchSize"), lightMarchSize);
+
+        glUniformMatrix4fv(glGetUniformLocation(raymarchShader.ID, "invCameraMatrix"), 1, GL_FALSE, glm::value_ptr(glm::inverse(camera.cameraMatrix)));
+        glUniform3f(glGetUniformLocation(raymarchShader.ID, "cameraPosition"), camera.Position.x, camera.Position.y, camera.Position.z);
 
         for (Light *light : Light::lights)
         {
@@ -164,6 +197,8 @@ int main()
         {
             model->Draw(pbrShader, camera);
         }
+
+        // cube.Draw(raymarchShader, camera);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // Draw the framebuffer rectangle
@@ -184,6 +219,9 @@ int main()
         ImGui::TextColored(ImVec4(128.0f, 0.0f, 128.0f, 255.0f), "Stats");
         ImGui::Text("FPS: %.1f", io.Framerate);
         ImGui::Text("Frame time: %.3f ms", 1000.0f / io.Framerate);
+        ImGui::DragFloat("March Size", &marchSize, 0.002f, 0.001f, 1.0f);
+        ImGui::DragFloat("Light March Size", &lightMarchSize, 0.002f, 0.001f, 1.0f);
+        ImGui::DragFloat("Absorption Coefficient", &absorptionCoEff, 0.01f, 0.0f, 1.0f);
         ImGui::End();
 
         ImGui::Begin("Lights", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
@@ -198,6 +236,7 @@ int main()
         {
             model->UI();
         }
+        cube.UI();
         ImGui::End();
 
         ImGui::Render();
@@ -217,6 +256,7 @@ int main()
     {
         model->SaveImGuiData("saveData/transforms.json");
     }
+    cube.SaveImGuiData("saveData/transforms.json");
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
